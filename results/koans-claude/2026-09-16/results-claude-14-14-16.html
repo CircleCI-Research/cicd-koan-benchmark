@@ -1,0 +1,2426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MindTrial - Run Results</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --background-color: #f7f7f7;
+            --text-color: #333;
+            --header-color: #444;
+            --table-bg: #fff;
+            --table-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --row-hover-bg: #f1f9ff;
+            --row-even-bg: #f2f2f2;
+            --row-odd-bg: #ffffff;
+            --success-bg: #d4edda;
+            --success-text: #155724;
+            --failure-bg: #fff3cd;
+            --failure-text: #856404;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+            --skipped-bg: #e2e3e5;
+            --skipped-text: #383d41;
+            --border-color: #e0e0e0;
+             
+            --matrix-header-size: 120px;  
+            --matrix-header-fudge: 4px;   
+            --matrix-cell-size: 60px;    
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 1em;
+        }
+        h1, h2 {
+            text-align: center;
+            color: var(--header-color);
+        }
+        h1 { margin-bottom: 0.2em; }
+        h2 { margin-top: 1.5em; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2em;
+            box-shadow: var(--table-shadow);
+            background-color: var(--table-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        thead th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            position: relative;
+        }
+    
+     
+    table:not(.matrix-table) tbody tr:nth-child(even) { background-color: var(--row-even-bg); }
+    table:not(.matrix-table) tbody tr:nth-child(odd) { background-color: var(--row-odd-bg); }
+    table:not(.matrix-table) tbody tr:hover { background-color: var(--row-hover-bg); }
+        .status-passed { background-color: var(--success-bg); color: var(--success-text); font-weight: bold; }
+        .status-failed { background-color: var(--failure-bg); color: var(--failure-text); font-weight: bold; }
+        .status-error { background-color: var(--error-bg); color: var(--error-text); font-weight: bold; }
+        .status-skipped { background-color: var(--skipped-bg); color: var(--skipped-text); font-weight: bold; }
+    .details { cursor: pointer; color: var(--primary-color); font-weight: 600; text-decoration: underline; background: none; border: none; padding: 0; font-size: 0.95em; }
+        .details:focus { outline: 2px solid var(--primary-color); }
+    .details-content { display: none; background-color: #fafafa; border: 1px solid var(--border-color); margin-top: 8px; padding: 14px 16px; font-size: 0.95em; border-radius:6px; max-width:900px; }
+    .details-content section { margin-top: 1.1em; }
+    .details-content section:first-of-type { margin-top: 0; }
+    .details-content h4 { margin: 0 0 0.35em 0; color: var(--header-color); font-size: 1.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+     
+    .details-content summary { white-space: nowrap; cursor: pointer; }
+    .details-content details { margin: 0.4em 0; }
+      
+     .details-content details summary { list-style:none; cursor:pointer; position:relative; padding-left:1.1em; }
+     .details-content details summary::-webkit-details-marker { display:none; }
+    .details-content details summary:before { content:'▶'; position:absolute; left:0; top:0.12em; font-size:0.92em; line-height:1; }
+     .details-content details[open] summary:before { content:'▼'; }
+      
+     .details-content details.explanation { padding-left:1.1em; }
+     .details-content details.explanation summary { padding-left:0; }
+     .details-content details.explanation summary:before { left:-1.1em; }
+     .details-content details.explanation .explanation-body { margin-left:0; }
+     
+    .details-content ol.expected-answers { margin-left:1.2em; }
+    .details-content ol.expected-answers li::marker { font-weight:700; font-size:0.8em; color:#555; }
+    .section-answer { border-left: 4px solid var(--primary-color); padding-left: 10px; }
+    .section-validation { border-left: 4px solid #28a745; padding-left: 10px; }
+    .section-error { border-left: 4px solid #c0392b; padding-left: 10px; background: #fff6f6; }
+    .section-error h4 { color: #a1271c; }
+    .details-content pre { background:#fff; border:1px solid var(--border-color); padding:6px 8px; overflow:auto; border-radius:4px; max-height:300px; white-space:pre-wrap; word-break:break-word; }
+    .details-content code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 0.85em; }
+    .details-content dl { margin:0.5em 0 0 0; }
+    .details-content dt { font-weight:600; margin-top:0.6em; font-size:0.85em; }
+     .details-content dd { margin:0.2em 0 0.6em 0.8em; font-size:0.85em; }
+      
+     .details-content dl.tech-details { padding-left:1.2em; }
+     .details-content dl.tech-details dt { margin-left:-1.2em; }
+     .details-content dl.tech-details dd { margin:0.2em 0 0.6em 0; }
+     
+    td.details-toggle-cell { min-width:130px; vertical-align: top; text-align:right; }
+    td.details-toggle-cell .details { white-space:nowrap; }
+    td.details-toggle-cell .details-content { margin-top:8px; text-align:left; }
+    .details-icons { display: flex; gap: 8px; margin-top: 8px; align-items: center; justify-content: flex-end; }
+    .icon-btn { cursor: pointer; background: none; border: none; padding: 4px; font-size: 1.1em; opacity: 0.6; transition: opacity 0.2s; }
+    .icon-btn:hover { opacity: 1; }
+    .icon-btn:focus { outline: 2px solid var(--primary-color); border-radius: 2px; }
+    .answer-list { margin: 0; padding-left: 1.5em; }
+        .answer-list li { margin-bottom: 1em; }
+        .answer-list.single { list-style-type: none; padding-left: 0; }
+        .answer-list.single li { margin-bottom: 0; }
+        .details-cell pre { font-family: inherit; margin: 0; line-height: inherit; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; overflow-x: auto; }
+        .filter-container { display: flex; gap: 10px; margin-bottom: 10px; max-width: 800px; align-items: center; }
+        .filter-sort-controls { display: flex; flex-direction: column; gap: 5px; }
+        .filter-sort-controls .header-with-sort { display: flex; align-items: center; gap: 5px; }
+        .filter-sort-controls input, .filter-sort-controls select { width: 100%; box-sizing: border-box; }
+        .sort-btn { cursor: pointer; margin-left: 5px; }
+        .clickable { cursor: pointer; }
+    footer { text-align: center; font-size: 0.85em; color: #777; margin-top: 2em; border-top: 1px solid var(--border-color); padding-top: 1em; }
+    .para { margin:0 0 0.7em 0; }
+    .para:last-child { margin-bottom:0; }
+    .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+    th.details-header { text-align:right; min-width:130px; }
+    
+     
+    .matrix-container { 
+        padding: 20px;  
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: calc(100% - 40px);  
+        max-width: max-content;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+    .matrix-table { 
+        border-collapse: collapse; 
+        border-spacing: 0; 
+        margin: 10px auto; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        width: auto;  
+        max-width: max-content;  
+        table-layout: fixed;  
+    }
+    .matrix-table th, .matrix-table td { border: 1px solid #ddd; text-align: center; vertical-align: middle; box-sizing: border-box; }
+    .matrix-table th { 
+        background-color: var(--primary-color); 
+        color: white; 
+        font-weight: 600; 
+        padding: 4px 2px; 
+        font-size: 0.7em;
+        text-transform: none;
+        line-height: 1.1;
+    }
+    .matrix-table .matrix-header { 
+        writing-mode: vertical-lr; 
+        text-orientation: mixed; 
+        min-width: 30px; 
+        max-width: 40px;  
+    width: 30px;
+    height: calc(var(--matrix-header-size) + var(--matrix-header-fudge));
+    max-height: 200px;  
+        white-space: normal; 
+        overflow: hidden; 
+        overflow-wrap: break-word;
+        word-break: break-word;
+        padding: 4px 1px; 
+        font-size: 0.65em;
+        font-weight: 600;
+        line-height: 1.0;
+        text-transform: none;
+    box-sizing: border-box;  
+    }
+    .matrix-table .matrix-row-header { 
+        background-color: var(--primary-color); 
+        color: white; 
+        font-weight: 600; 
+    padding: 4px 1px; 
+        text-align: center; 
+    width: var(--matrix-header-size);
+    max-width: 200px;  
+        white-space: normal; 
+        overflow: hidden; 
+        font-size: 0.65em;
+        line-height: 1.0;
+        word-break: break-all;
+        text-transform: none;
+    box-sizing: border-box;  
+    }
+    .matrix-cell { 
+    width: var(--matrix-cell-size); 
+    height: var(--matrix-cell-size); 
+        padding: 2px; 
+        position: relative; 
+        cursor: default;
+        transition: background-color 0.2s ease;
+    box-sizing: border-box;
+    }
+    .matrix-cell.diagonal { font-weight: bold; }
+    .matrix-cell-content { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; font-size: 0.8em; }
+    .matrix-percentage { font-weight: bold; margin-bottom: 1px; font-size: 0.9em; }
+    .matrix-details { font-size: 0.7em; opacity: 0.9; }
+    .matrix-legend { 
+        margin: 10px 0; 
+        padding: 8px 12px; 
+        background-color: #f8f9fa; 
+        border-radius: 4px; 
+        font-size: 0.85em;
+        width: 100%;  
+        box-sizing: border-box;  
+    }
+    .matrix-legend h3 { margin: 0 0 8px 0; color: var(--header-color); font-size: 1em; }
+    .matrix-legend-items { 
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 15px; 
+        margin-bottom: 5px; 
+        justify-content: flex-start;  
+    }
+    .matrix-legend-item { display: flex; align-items: center; }
+    .matrix-legend-color { display: inline-block; width: 16px; height: 12px; margin-right: 5px; border: 1px solid #ccc; }
+    .matrix-legend p { margin: 5px 0 0 0; font-size: 0.8em; color: #666; }
+     
+    #summary-table { margin-bottom: 10px; }
+    
+    #compare-selected-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    
+    .matrix-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    }
+    .matrix-modal-content {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        max-width: 500px;
+        max-height: 70vh;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        margin: 20px;
+    }
+    .matrix-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #eee;
+    }
+    .matrix-modal-title {
+        margin: 0;
+        font-size: 1.1em;
+        color: var(--header-color);
+    }
+    .matrix-modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5em;
+        cursor: pointer;
+        color: #666;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+    }
+    .matrix-modal-close:hover {
+        background: #f5f5f5;
+        color: #333;
+    }
+    .matrix-modal-summary {
+        margin: 0 0 16px 0;
+        font-size: 0.95em;
+        color: #666;
+    }
+    .matrix-modal .status-group {
+        margin-bottom: 16px;
+    }
+    .matrix-modal .status-group:last-child {
+        margin-bottom: 0;
+    }
+    .matrix-modal .status-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+        text-transform: capitalize;
+        font-size: 1em;
+    }
+    .matrix-modal .status-title.passed { color: var(--success-text); }
+    .matrix-modal .status-title.failed { color: var(--failure-text); }
+    .matrix-modal .status-title.error { color: var(--error-text); }
+    .matrix-modal .task-list {
+        background: #f8f9fa;
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin: 0;
+        font-size: 0.9em;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .matrix-modal .task-item {
+        margin-bottom: 4px;
+        padding: 2px 0;
+        word-break: break-word;
+        user-select: text;
+        cursor: text;
+    }
+    .matrix-modal .task-item:last-child {
+        margin-bottom: 0;
+    }
+    .empty-task-message {
+        color: #666;
+        font-style: italic;
+    }
+    .selected-count {
+        margin-left: 10px;
+        font-size: 0.9em;
+        color: #666;
+    }
+    </style>
+    <script>
+        function toggleDetails(id, btn) {
+            const element = document.getElementById(id);
+            const show = (element.style.display === "none" || element.style.display === "");
+            element.style.display = show ? "block" : "none";
+            if (btn) {
+                btn.setAttribute('aria-expanded', show ? 'true' : 'false');
+                btn.textContent = show ? 'Hide Details' : 'Show Details';
+            }
+        }
+
+        function copyTraceID(traceID, btn) {
+            navigator.clipboard.writeText(traceID).then(() => {
+                const originalTitle = btn.title;
+                btn.title = 'Copied!';
+                setTimeout(() => { btn.title = originalTitle; }, 2000);
+            }).catch(() => {
+                btn.title = 'Failed to copy';
+            });
+        }
+
+        function updateVisibleCount(table) {
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            const visible = rows.filter(r => r.style.display !== 'none').length;
+            const counter = document.getElementById('visible-count');
+            if (counter) counter.textContent = visible;
+        }
+
+        function filterAndSortTable() {
+            const table = document.getElementById('results-table');
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            const filters = {
+                provider: document.getElementById('provider-filter').value.toLowerCase(),
+                run: document.getElementById('run-filter').value.toLowerCase(),
+                task: document.getElementById('task-filter').value,
+                status: document.getElementById('status-filter').value.toLowerCase(),
+                search: document.getElementById('search-filter').value
+            };
+            let taskRegex = null, searchRegex = null;
+            if (filters.task) {
+                try { taskRegex = new RegExp(filters.task, 'i'); } catch (e) { taskRegex = null; }
+            }
+            if (filters.search) {
+                try { searchRegex = new RegExp(filters.search, 'i'); } catch (e) { searchRegex = null; }
+            }
+            rows.forEach(row => {
+                const provider = row.dataset.provider.toLowerCase();
+                const run = row.dataset.run.toLowerCase();
+                const task = row.dataset.task;
+                const status = row.dataset.status.toLowerCase();
+
+                const searchMatch = searchRegex ? (searchRegex.test(provider) || searchRegex.test(run) || searchRegex.test(task)) : (!filters.search || provider.includes(filters.search.toLowerCase()) || run.includes(filters.search.toLowerCase()) || task.toLowerCase().includes(filters.search.toLowerCase()));
+
+                const show = (filters.provider === '' || provider === filters.provider) &&
+                             (filters.run === '' || run === filters.run) &&
+                             (!taskRegex || taskRegex.test(task)) &&
+                             (filters.status === '' || status === filters.status) &&
+                             (filters.search === '' || searchMatch);
+                
+                row.style.display = show ? '' : 'none';
+            });
+            updateVisibleCount(table);
+        }
+
+        function sortTable(tableId, column, direction) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                let valA, valB;
+                if (column.startsWith('duration') || column.startsWith('passed') || column.startsWith('failed') || column.startsWith('error') || column.startsWith('skipped') || column.startsWith('passrate') || column.startsWith('accuracy') || column.startsWith('errorrate')) {
+                    valA = parseFloat(a.dataset[column]);
+                    valB = parseFloat(b.dataset[column]);
+                } else {
+                    valA = a.dataset[column].toLowerCase();
+                    valB = b.dataset[column].toLowerCase();
+                }
+
+                if (valA < valB) return direction === 'asc' ? -1 : 1;
+                if (valA > valB) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function setupSortButtons() {
+            document.querySelectorAll('.sort-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const tableId = button.closest('table').id;
+                    const column = button.dataset.column;
+                    const direction = button.dataset.direction || 'asc';
+                    
+                    document.querySelectorAll(`#${tableId} .sort-btn`).forEach(btn => {
+                        if (btn !== button) {
+                            btn.innerHTML = '↕️';
+                            delete btn.dataset.direction;
+                        }
+                    });
+
+                    sortTable(tableId, column, direction);
+                    button.innerHTML = direction === 'asc' ? '🔼' : '🔽';
+                    button.dataset.direction = direction === 'asc' ? 'desc' : 'asc';
+                });
+            });
+        }
+        
+        function setupClickableFilters() {
+            document.querySelectorAll('.clickable-filter').forEach(element => {
+                element.addEventListener('click', () => {
+                    const filterType = element.dataset.filterType;
+                    const filterValue = element.dataset.filterValue;
+                    document.getElementById(`${filterType}-filter`).value = filterValue;
+                    filterAndSortTable();
+                });
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('provider-filter').value = '';
+            document.getElementById('run-filter').value = '';
+            document.getElementById('task-filter').value = '';
+            document.getElementById('status-filter').value = '';
+            document.getElementById('search-filter').value = '';
+            filterAndSortTable();
+        }
+
+        function updateCompareButton() {
+            const checkboxes = document.querySelectorAll('.run-compare-checkbox:checked');
+            const button = document.getElementById('compare-selected-btn');
+            const counter = document.getElementById('selected-count');
+            
+            button.disabled = checkboxes.length < 2;
+            counter.textContent = checkboxes.length > 0 ? `${checkboxes.length} selected` : '';
+        }
+
+        function compareSelectedRuns() {
+            const checkboxes = document.querySelectorAll('.run-compare-checkbox:checked');
+            if (checkboxes.length < 2) return;
+
+            const selectedRuns = Array.from(checkboxes).map(cb => ({
+                provider: cb.dataset.provider,
+                run: cb.dataset.run,
+                key: `${cb.dataset.provider}-${cb.dataset.run}`
+            }));
+
+            const matrix = generateComparisonMatrix(selectedRuns);
+            openMatrixWindow(matrix, selectedRuns);
+        }
+
+    function generateComparisonMatrix(runs) {
+            const matrix = {};
+            const results = getResultsData();
+
+            for (let i = 0; i < runs.length; i++) {
+                for (let j = 0; j < runs.length; j++) {
+                    const runA = runs[i];
+                    const runB = runs[j];
+                    const key = `${runA.key}-${runB.key}`;
+                    
+                    if (i === j) {
+                        
+                        const data = results[runA.key] || {};
+                        const tasks = Object.keys(data).filter(task => data[task] !== 'skipped');
+                        const tasksByStatus = {};
+                        tasks.forEach(task => {
+                            const status = data[task];
+                            if (!tasksByStatus[status]) tasksByStatus[status] = [];
+                            tasksByStatus[status].push(task);
+                        });
+                        matrix[key] = {
+                            agree: {
+                                percentage: 100,
+                                identical: true,
+                                tasksByStatus,
+                                total: tasks.length,
+                                common: tasks.length
+                            },
+                            disagree: {
+                                percentage: 0,
+                                identical: false,
+                                tasksByStatus: {},
+                                total: tasks.length,
+                                common: 0
+                            }
+                        };
+                    } else {
+                        matrix[key] = calculateAgreementDisagreement(runA, runB, results);
+                    }
+                }
+            }
+
+            return matrix;
+        }
+
+        function getResultsData() {
+            const results = {};
+            const rows = document.querySelectorAll('#results-table tbody tr');
+            
+            rows.forEach(row => {
+                const provider = row.dataset.provider;
+                const run = row.dataset.run;
+                const task = row.dataset.task;
+                const status = row.dataset.status;
+                
+                const key = `${provider}-${run}`;
+                if (!results[key]) results[key] = {};
+                results[key][task] = status;
+            });
+            
+            return results;
+        }
+
+        
+
+        function calculateAgreementDisagreement(runA, runB, results) {
+            const dataA = results[runA.key] || {};
+            const dataB = results[runB.key] || {};
+
+            const commonTasks = Object.keys(dataA).filter(task => task in dataB);
+            const nonSkippedTasks = commonTasks.filter(task => 
+                dataA[task] !== 'skipped' && dataB[task] !== 'skipped'
+            );
+
+            if (nonSkippedTasks.length === 0) {
+                return {
+                    agree: { percentage: 0, total: 0, common: 0, tasksByStatus: {} },
+                    disagree: { percentage: 0, total: 0, common: 0, tasksByStatus: {} }
+                };
+            }
+
+            const agreeByStatus = {};
+            const disagreeList = [];
+            let agreeCount = 0;
+
+            nonSkippedTasks.forEach(task => {
+                const a = dataA[task];
+                const b = dataB[task];
+                if (a === b) {
+                    if (!agreeByStatus[a]) agreeByStatus[a] = [];
+                    agreeByStatus[a].push(task);
+                    agreeCount += 1;
+                } else {
+                    disagreeList.push(task);
+                }
+            });
+
+            const total = nonSkippedTasks.length;
+            const agreePct = Math.round((agreeCount / total) * 100);
+            const disagreeCount = total - agreeCount;
+            const disagreePct = 100 - agreePct;
+
+            return {
+                agree: { percentage: agreePct, total, common: agreeCount, tasksByStatus: agreeByStatus },
+                disagree: { percentage: disagreePct, total, common: disagreeCount, tasksByStatus: { tasks: disagreeList } }
+            };
+        }
+
+        function generateMatrixColor(overlap) {
+            if (overlap.percentage === 0) return 'transparent';
+            
+            const saturation = overlap.percentage / 100;
+            const total = overlap.common;
+            
+            if (total === 0) return 'transparent';
+            
+            const passed = overlap.tasksByStatus.passed ? overlap.tasksByStatus.passed.length : 0;
+            const failed = overlap.tasksByStatus.failed ? overlap.tasksByStatus.failed.length : 0;
+            const error = overlap.tasksByStatus.error ? overlap.tasksByStatus.error.length : 0;
+            
+            const passedRatio = passed / total;
+            const failedRatio = failed / total;
+            const errorRatio = error / total;
+            
+            const r = Math.round(155 * passedRatio + 255 * failedRatio + 255 * errorRatio);
+            const g = Math.round(255 * passedRatio + 255 * failedRatio + 100 * errorRatio);
+            const b = Math.round(155 * passedRatio + 100 * failedRatio + 100 * errorRatio);
+            
+            return `rgba(${r}, ${g}, ${b}, ${saturation})`;
+        }
+
+        function generateDisagreementColor(dis) {
+            if (dis.percentage === 0) return 'transparent';
+            const saturation = dis.percentage / 100;
+            
+            const r = 176, g = 186, b = 196;
+            return `rgba(${r}, ${g}, ${b}, ${saturation})`;
+        }
+
+        function openMatrixWindow(matrix, runs) {
+            const html = generateMatrixHTML(matrix, runs);
+            
+            const cellWidth = 60;      
+            const headerWidth = 120;   
+            const padding = 80;
+            const titleHeight = 60;    
+            const legendHeight = 120;  
+            const headerRowHeight = 120; 
+            const containerPadding = 30; 
+            const tableMargins = 40;   
+            const extraBuffer = 60;    
+            const minWidth = 600; 
+            const minHeight = 500;     
+            
+            
+            const tableWidth = headerWidth + (runs.length * cellWidth) + padding + 50;
+            const legendMinWidth = 450; 
+            const calculatedWidth = Math.max(tableWidth, legendMinWidth);
+            const matrixRowsHeight = Math.max(runs.length * 60, 180); 
+            const tableHeight = titleHeight + legendHeight + headerRowHeight + containerPadding + 
+                              tableMargins + matrixRowsHeight + extraBuffer;
+            
+            const width = Math.max(minWidth, Math.min(1400, calculatedWidth));
+            const height = Math.max(minHeight, Math.min(1000, tableHeight));
+            
+            const newWindow = window.open('', '_blank', `width=${width},height=${height},scrollbars=yes,resizable=yes`);
+            newWindow.document.write(html);
+            newWindow.document.close();
+        }
+
+        function generateMatrixHTML(matrix, runs) {
+            
+            function escapeHtml(s) {
+                return String(s).replace(/[&<>"']/g, c => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                })[c] || c);
+            }
+            let html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Run Comparison Matrix</title>
+    <style>
+        ${document.querySelector('style').textContent}
+    </style>
+    \x3Cscript>
+        function setupMatrixHover() {
+            const table = document.querySelector('.matrix-table');
+            const cells = table.querySelectorAll('.matrix-cell');
+            
+            cells.forEach((cell, index) => {
+                const row = Math.floor(index / ${runs.length});
+                const col = index % ${runs.length};
+                
+                cell.addEventListener('mouseenter', () => {
+                    // Highlight row
+                    const rowCells = table.querySelectorAll(\`tbody tr:nth-child(\${row + 1}) .matrix-cell\`);
+                    rowCells.forEach(c => c.classList.add('row-highlight'));
+                    
+                    // Highlight column
+                    const colCells = table.querySelectorAll(\`tbody tr .matrix-cell:nth-child(\${col + 2})\`);
+                    colCells.forEach(c => c.classList.add('col-highlight'));
+                });
+                
+                cell.addEventListener('mouseleave', () => {
+                    // Remove all highlights
+                    cells.forEach(c => {
+                        c.classList.remove('row-highlight', 'col-highlight');
+                    });
+                });
+            });
+        }
+        
+        function setupMatrixModal() {
+            // Create modal element
+            const modal = document.createElement('div');
+            modal.className = 'matrix-modal';
+            modal.innerHTML = \`
+                <div class="matrix-modal-content">
+                    <div class="matrix-modal-header">
+                        <h3 class="matrix-modal-title"></h3>
+                        <button class="matrix-modal-close" title="Close">&times;</button>
+                    </div>
+                    <p class="matrix-modal-summary"></p>
+                    <div class="matrix-modal-body"></div>
+                </div>
+            \`;
+            document.body.appendChild(modal);
+            
+            const modalContent = modal.querySelector('.matrix-modal-content');
+            const title = modal.querySelector('.matrix-modal-title');
+            const summary = modal.querySelector('.matrix-modal-summary');
+            const body = modal.querySelector('.matrix-modal-body');
+            const closeBtn = modal.querySelector('.matrix-modal-close');
+            
+            // Close modal handlers
+            const closeModal = () => {
+                modal.style.display = 'none';
+            };
+            
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    closeModal();
+                }
+            });
+            
+            // Add click handlers to matrix cells
+            document.querySelectorAll('.matrix-cell[data-modal]').forEach(cell => {
+                cell.style.cursor = 'pointer';
+                cell.addEventListener('click', (e) => {
+                    const data = JSON.parse(e.currentTarget.getAttribute('data-modal'));
+                    
+                    title.textContent = data.title;
+                    summary.textContent = data.summary;
+                    
+                    body.innerHTML = generateModalContent(data.tasksByStatus);
+                    
+                    modal.style.display = 'flex';
+                });
+            });
+        }
+        
+        function generateModalContent(tasksByStatus) {
+            if (Object.keys(tasksByStatus).length === 0) {
+                return '<p class="empty-task-message">No tasks to display</p>';
+            }
+            
+            let content = '';
+            const keys = Object.keys(tasksByStatus);
+            const defaultOrder = ['passed', 'failed', 'error'];
+            const isDefault = keys.every(k => defaultOrder.includes(k));
+            const order = keys.length === 1 && keys[0] === 'tasks'
+                ? ['tasks']
+                : (isDefault ? defaultOrder.filter(k => keys.includes(k)) : keys.sort());
+            
+            order.forEach(status => {
+                const items = tasksByStatus[status];
+                if (items && items.length > 0) {
+                    const title = status === 'tasks' ? 'Tasks' : (status.charAt(0).toUpperCase() + status.slice(1));
+                    content += \`
+                        <div class="status-group">
+                            <div class="status-title \${status}">\${title} (\${items.length}):</div>
+                            <div class="task-list">\`;
+                    items.forEach(task => {
+                        content += \`<div class="task-item">\${task}</div>\`;
+                    });
+                    content += \`</div></div>\`;
+                }
+            });
+            
+            return content;
+        }
+        
+        function equalizeMatrixHeaderSizes() {
+            const rowHeaders = Array.from(document.querySelectorAll('.matrix-row-header'));
+            if (rowHeaders.length === 0) return;
+            
+            // Calculate target width but apply reasonable limits
+            const currentWidths = rowHeaders.map(h => h.getBoundingClientRect().width);
+            const maxCurrentWidth = Math.max(...currentWidths);
+            
+            // Limit growth: don't exceed 200px or grow more than 50% beyond original
+            const originalWidth = 120; // var(--matrix-header-size)
+            const maxAllowedWidth = Math.min(200, originalWidth * 1.5);
+            const targetWidth = Math.min(maxCurrentWidth, maxAllowedWidth);
+            
+            // Only adjust column header height if it makes sense (avoid excessive growth)
+            const targetHeight = Math.min(targetWidth + 4, 200); // +4 for fudge, max 200px
+            
+            document.querySelectorAll('.matrix-header').forEach(h => {
+                h.style.height = targetHeight + 'px';
+                // Don't change width - keep column headers narrow
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setupMatrixHover();
+            setupMatrixModal();
+            equalizeMatrixHeaderSizes();
+        });
+        window.addEventListener('resize', equalizeMatrixHeaderSizes);
+    \x3C/script>
+    <style>
+        .matrix-cell.row-highlight {
+            box-shadow: inset 0 0 0 2px rgba(74, 144, 226, 0.4) !important;
+        }
+        .matrix-cell.col-highlight {
+            box-shadow: inset 0 0 0 2px rgba(74, 144, 226, 0.4) !important;
+        }
+        .matrix-cell.row-highlight.col-highlight {
+            box-shadow: inset 0 0 0 3px rgba(74, 144, 226, 0.6) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-container">
+        <h1>Run Comparison Matrix</h1>
+        <div class="matrix-legend">
+            <h3>Legend</h3>
+            <div class="matrix-legend-items">
+                <div class="matrix-legend-item">
+                    <span class="matrix-legend-color" style="background-color: rgba(155, 255, 155, 0.8);"></span>
+                    <span>Passed</span>
+                </div>
+                <div class="matrix-legend-item">
+                    <span class="matrix-legend-color" style="background-color: rgba(255, 255, 100, 0.8);"></span>
+                    <span>Failed</span>
+                </div>
+                <div class="matrix-legend-item">
+                    <span class="matrix-legend-color" style="background-color: rgba(255, 100, 100, 0.8);"></span>
+                    <span>Error</span>
+                </div>
+            </div>
+            <div class="matrix-legend-items">
+                <div class="matrix-legend-item">
+                    <span class="matrix-legend-color" style="background-color: rgba(176, 186, 196, 0.8);"></span>
+                    <span>Disagreement</span>
+                </div>
+            </div>
+            <p>Color saturation = overlap %, Color hue = distribution of overlapping results</p>
+            <p>Disagreement saturation = disagreement %</p>
+            <p>The matrix is symmetrical. Lower triangle shows overlap; upper triangle shows disagreement. Diagonal shows per-run distribution.</p>
+        </div>
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th></th>`;
+            
+            runs.forEach(run => {
+                html += `<th class="matrix-header" title="${escapeHtml(run.provider)} - ${escapeHtml(run.run)}">${escapeHtml(run.run)}</th>`;
+            });
+            
+            html += `</tr></thead><tbody>`;
+            
+            runs.forEach((runA, i) => {
+                html += `<tr><th class="matrix-row-header" title="${escapeHtml(runA.provider)} - ${escapeHtml(runA.run)}">${escapeHtml(runA.run)}</th>`;
+                
+                runs.forEach((runB, j) => {
+                    const key = `${runA.key}-${runB.key}`;
+                    if (i === j) {
+                        const diag = matrix[key].agree;
+                        const p = diag.tasksByStatus.passed ? diag.tasksByStatus.passed.length : 0;
+                        const f = diag.tasksByStatus.failed ? diag.tasksByStatus.failed.length : 0;
+                        const e = diag.tasksByStatus.error ? diag.tasksByStatus.error.length : 0;
+                        const tooltipText = `Run distribution: Passed ${p}, Failed ${f}, Error ${e}`;
+                        const modalData = { title: `${escapeHtml(runA.run)}`, summary: `${diag.total} tasks total`, tasksByStatus: diag.tasksByStatus };
+                        const color = generateMatrixColor(diag);
+                        html += `<td class="matrix-cell diagonal" style="background-color: ${color};" title="${tooltipText}" data-modal='${JSON.stringify(modalData).replace(/'/g, "&#39;")}'>
+                            <div class="matrix-cell-content">
+                                <div class="matrix-percentage">${diag.percentage}%</div>
+                                <div class="matrix-details">${diag.total} tasks</div>
+                            </div>
+                        </td>`;
+                        return;
+                    }
+                    if (j < i) {
+                        const overlap = matrix[key].agree;
+                        const color = generateMatrixColor(overlap);
+                        const p = overlap.tasksByStatus.passed ? overlap.tasksByStatus.passed.length : 0;
+                        const f = overlap.tasksByStatus.failed ? overlap.tasksByStatus.failed.length : 0;
+                        const e = overlap.tasksByStatus.error ? overlap.tasksByStatus.error.length : 0;
+                        let tooltipText, modalData;
+                        if (!overlap.total) {
+                            tooltipText = 'No comparable tasks (all skipped or none in common)';
+                            modalData = { title: `${escapeHtml(runA.run)} = ${escapeHtml(runB.run)}`, summary: 'All tasks were skipped or none in common', tasksByStatus: {} };
+                        } else {
+                            tooltipText = `Overlap: ${overlap.percentage}% (${overlap.common}/${overlap.total}) | Passed ${p}, Failed ${f}, Error ${e}`;
+                            modalData = { title: `${escapeHtml(runA.run)} = ${escapeHtml(runB.run)}`, summary: `${overlap.percentage}% overlap (${overlap.common}/${overlap.total} tasks)`, tasksByStatus: overlap.tasksByStatus };
+                        }
+                        html += `<td class="matrix-cell" style="background-color: ${color};" title="${tooltipText}" data-modal='${JSON.stringify(modalData).replace(/'/g, "&#39;")}'>
+                            <div class="matrix-cell-content">
+                                <div class="matrix-percentage">${overlap.percentage}%</div>
+                                <div class="matrix-details">${overlap.common}/${overlap.total}</div>
+                            </div>
+                        </td>`;
+                        return;
+                    }
+                    const dis = matrix[key].disagree;
+                    const color = generateDisagreementColor(dis);
+                    let tooltipText, modalData;
+                    if (!dis.total) {
+                        tooltipText = 'No comparable tasks (all skipped or none in common)';
+                        modalData = { title: `${escapeHtml(runA.run)} ≠ ${escapeHtml(runB.run)}`, summary: 'All tasks were skipped or none in common', tasksByStatus: {} };
+                    } else {
+                        tooltipText = `Disagreement: ${dis.percentage}% (${dis.common}/${dis.total})`;
+                        modalData = { title: `${escapeHtml(runA.run)} ≠ ${escapeHtml(runB.run)}`, summary: `${dis.percentage}% disagreement (${dis.common}/${dis.total} tasks)`, tasksByStatus: dis.tasksByStatus };
+                    }
+                    html += `<td class="matrix-cell" style="background-color: ${color};" title="${tooltipText}" data-modal='${JSON.stringify(modalData).replace(/'/g, "&#39;")}'>
+                        <div class="matrix-cell-content">
+                            <div class="matrix-percentage">${dis.percentage}%</div>
+                            <div class="matrix-details">${dis.common}/${dis.total}</div>
+                        </div>
+                    </td>`;
+                });
+                
+                html += '</tr>';
+            });
+            
+            html += `</tbody></table></div></body></html>`;
+            return html;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.filter-sort-controls input, .filter-sort-controls select, #search-filter').forEach(input => {
+                input.addEventListener('input', filterAndSortTable);
+            });
+             document.querySelectorAll('.filter-sort-controls select').forEach(select => {
+                select.addEventListener('change', filterAndSortTable);
+            });
+            setupSortButtons();
+            setupClickableFilters();
+            
+            
+            document.querySelectorAll('.run-compare-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', updateCompareButton);
+            });
+            
+            
+            const selectAllCheckbox = document.getElementById('select-all-runs');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const runCheckboxes = document.querySelectorAll('.run-compare-checkbox');
+                    runCheckboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                    updateCompareButton();
+                });
+                
+                
+                document.querySelectorAll('.run-compare-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const runCheckboxes = document.querySelectorAll('.run-compare-checkbox');
+                        const checkedBoxes = document.querySelectorAll('.run-compare-checkbox:checked');
+                        selectAllCheckbox.checked = runCheckboxes.length === checkedBoxes.length;
+                        selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < runCheckboxes.length;
+                    });
+                });
+            }
+            updateCompareButton();
+            
+            
+            filterAndSortTable();
+        });
+    </script>
+</head>
+<body itemscope itemtype="https://schema.org/WebPage">
+    <header>
+        <h1 itemprop="headline">MindTrial Run Results</h1>
+    </header>
+    <main itemprop="mainContentOfPage">
+        <section aria-labelledby="runsummary" itemscope itemtype="https://schema.org/Table" itemprop="hasPart">
+            <h2 id="runsummary" itemprop="headline">Summary</h2>
+            <meta itemprop="alternativeHeadline" content="AI Model Evaluation Run Summary">
+            <meta itemprop="description" content="Summary of passed, failed, error, and skipped counts, along with pass rate, accuracy, error rate, and total duration for each AI provider and run configuration. Pass Rate = Passed/(Passed+Failed+Error). Accuracy = Passed/(Passed+Failed). Error Rate = Error/(Passed+Failed+Error). Skipped tasks are excluded from rate calculations. Rates default to 0 when the denominator is 0.">
+            <table id="summary-table">
+                <caption class="visually-hidden">Run result summary by provider and run.</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 30px; padding: 8px 4px; text-align: center; vertical-align: middle;">
+                            <input type="checkbox" id="select-all-runs" title="Select/Deselect All Runs" style="margin: 0; vertical-align: middle;">
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Provider</span>
+                                <span class="sort-btn" data-column="provider" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Run</span>
+                                <span class="sort-btn" data-column="run" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Passed</span>
+                                <span class="sort-btn" data-column="passed" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Failed</span>
+                                <span class="sort-btn" data-column="failed" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Error</span>
+                                <span class="sort-btn" data-column="error" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Skipped</span>
+                                <span class="sort-btn" data-column="skipped" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Pass Rate (%)</span>
+                                <span class="sort-btn" data-column="passrate" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Accuracy (%)</span>
+                                <span class="sort-btn" data-column="accuracy" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Error Rate (%)</span>
+                                <span class="sort-btn" data-column="errorrate" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Total Duration</span>
+                                <span class="sort-btn" data-column="duration" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Input Tokens</span>
+                                <span class="sort-btn" data-column="inputtokens" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Output Tokens</span>
+                                <span class="sort-btn" data-column="outputtokens" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Est. Cost</span>
+                                <span class="sort-btn" data-column="cost" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr itemscope itemtype="https://schema.org/Observation" data-provider="anthropic" data-run="Claude Haiku 4.5 (control)" data-passed="4" data-failed="1" data-error="0" data-skipped="0" data-passrate="80.00" data-accuracy="80.00" data-errorrate="0.00" data-duration="39038" data-inputtokens="6483" data-outputtokens="1939" data-cost="0.016178">
+                        <td>
+                            <input type="checkbox" class="run-compare-checkbox" data-provider="anthropic" data-run="Claude Haiku 4.5 (control)" title="Select for comparison">
+                        </td>
+                        <td itemprop="observationAbout" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic">
+                            <span itemprop="name">anthropic</span>
+                        </td>
+                        <td itemprop="identifier" class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Haiku 4.5 (control)" title="Filter by run: Claude Haiku 4.5 (control)">Claude Haiku 4.5 (control)</td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Passed"><span itemprop="value">4</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Failed"><span itemprop="value">1</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Error"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Skipped"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Pass Rate (%)"><meta itemprop="unitText" content="%"><span itemprop="value">80.00</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Accuracy (%)"><meta itemprop="unitText" content="%"><span itemprop="value">80.00</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Error Rate (%)"><meta itemprop="unitText" content="%"><span itemprop="value">0.00</span></td>
+                        <td><time itemprop="observationPeriod" datetime="PT39.039S">39.039s</time>
+                        </td>
+                        <td>6483</td>
+                        <td>1939</td>
+                        <td>$0.02</td>
+                    </tr>
+                    <tr itemscope itemtype="https://schema.org/Observation" data-provider="anthropic" data-run="Claude Opus 5 (high thinking)" data-passed="5" data-failed="0" data-error="0" data-skipped="0" data-passrate="100.00" data-accuracy="100.00" data-errorrate="0.00" data-duration="41342" data-inputtokens="8419" data-outputtokens="2493" data-cost="0.104420">
+                        <td>
+                            <input type="checkbox" class="run-compare-checkbox" data-provider="anthropic" data-run="Claude Opus 5 (high thinking)" title="Select for comparison">
+                        </td>
+                        <td itemprop="observationAbout" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic">
+                            <span itemprop="name">anthropic</span>
+                        </td>
+                        <td itemprop="identifier" class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5 (high thinking)" title="Filter by run: Claude Opus 5 (high thinking)">Claude Opus 5 (high thinking)</td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Passed"><span itemprop="value">5</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Failed"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Error"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Skipped"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Pass Rate (%)"><meta itemprop="unitText" content="%"><span itemprop="value">100.00</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Accuracy (%)"><meta itemprop="unitText" content="%"><span itemprop="value">100.00</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Error Rate (%)"><meta itemprop="unitText" content="%"><span itemprop="value">0.00</span></td>
+                        <td><time itemprop="observationPeriod" datetime="PT41.342S">41.342s</time>
+                        </td>
+                        <td>8419</td>
+                        <td>2493</td>
+                        <td>$0.10</td>
+                    </tr>
+                    <tr itemscope itemtype="https://schema.org/Observation" data-provider="anthropic" data-run="Claude Sonnet 5 (extended thinking)" data-passed="5" data-failed="0" data-error="0" data-skipped="0" data-passrate="100.00" data-accuracy="100.00" data-errorrate="0.00" data-duration="32885" data-inputtokens="8419" data-outputtokens="2501" data-cost="0.041848">
+                        <td>
+                            <input type="checkbox" class="run-compare-checkbox" data-provider="anthropic" data-run="Claude Sonnet 5 (extended thinking)" title="Select for comparison">
+                        </td>
+                        <td itemprop="observationAbout" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic">
+                            <span itemprop="name">anthropic</span>
+                        </td>
+                        <td itemprop="identifier" class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Sonnet 5 (extended thinking)" title="Filter by run: Claude Sonnet 5 (extended thinking)">Claude Sonnet 5 (extended thinking)</td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Passed"><span itemprop="value">5</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Failed"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Error"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Skipped"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Pass Rate (%)"><meta itemprop="unitText" content="%"><span itemprop="value">100.00</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Accuracy (%)"><meta itemprop="unitText" content="%"><span itemprop="value">100.00</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Error Rate (%)"><meta itemprop="unitText" content="%"><span itemprop="value">0.00</span></td>
+                        <td><time itemprop="observationPeriod" datetime="PT32.886S">32.886s</time>
+                        </td>
+                        <td>8419</td>
+                        <td>2501</td>
+                        <td>$0.04</td>
+                    </tr></tbody>
+            </table>
+            <div style="margin-top: 0;">
+                <button id="compare-selected-btn" onclick="compareSelectedRuns()" disabled>Compare Selected Runs</button>
+                <span id="selected-count" class="selected-count"></span>
+            </div>
+        </section>
+        <section aria-labelledby="detailedresults" itemscope itemtype="https://schema.org/Table" itemprop="hasPart">
+            <h2 id="detailedresults" itemprop="headline">Task Results</h2>
+            <meta itemprop="alternativeHeadline" content="AI Model Evaluation Task Results">
+            <meta itemprop="description" content="Detailed results for each task, including provider, run configuration, task name, status, duration, answer, and details.">
+            <div class="filter-container">
+                <input id="search-filter" type="text" placeholder="Search (regexp)..." title="Supports regular expressions, e.g. hello|world, ^start, end$, ^(?!visual\s*-\s*).*" class="filter-sort-controls">
+                <button onclick="clearFilters()">Clear Filters</button>
+                <div><span id="visible-count" aria-live="polite"></span> visible</div>
+            </div>
+            <table id="results-table">
+                <caption class="visually-hidden">Detailed task evaluation results.</caption>
+                <thead>
+                    <tr>
+                        <th>
+                            <div class="filter-sort-controls">
+                                <div class="header-with-sort">
+                                    <span>Provider</span>
+                                    <span class="sort-btn" data-column="provider" data-direction="asc">↕️</span>
+                                </div>
+                                <select id="provider-filter">
+                                    <option value="">All</option>
+                                    <option value="anthropic">anthropic</option>
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="filter-sort-controls">
+                                <div class="header-with-sort">
+                                    <span>Run</span>
+                                    <span class="sort-btn" data-column="run" data-direction="asc">↕️</span>
+                                </div>
+                                <select id="run-filter">
+                                    <option value="">All</option>
+                                    <option value="Claude Haiku 4.5 (control)">Claude Haiku 4.5 (control)</option>
+                                    <option value="Claude Opus 5 (high thinking)">Claude Opus 5 (high thinking)</option>
+                                    <option value="Claude Sonnet 5 (extended thinking)">Claude Sonnet 5 (extended thinking)</option>
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="filter-sort-controls">
+                                <div class="header-with-sort">
+                                    <span>Task</span>
+                                    <span class="sort-btn" data-column="task" data-direction="asc">↕️</span>
+                                </div>
+                                <input id="task-filter" type="text" placeholder="Filter (regexp)..." title="Supports regular expressions, e.g. task-(one|two), ^task, ^(?!visual\s*-\s*).*">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="filter-sort-controls">
+                                <div class="header-with-sort">
+                                    <span>Status</span>
+                                    <span class="sort-btn" data-column="status" data-direction="asc">↕️</span>
+                                </div>
+                                <select id="status-filter">
+                                    <option value="">All</option>
+                                    <option value="passed">Passed</option>
+                                    <option value="failed">Failed</option>
+                                    <option value="error">Error</option>
+                                    <option value="skipped">Skipped</option>
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="filter-sort-controls">
+                                <div class="header-with-sort">
+                                    <span>Duration</span>
+                                    <span class="sort-btn" data-column="duration" data-direction="asc">↕️</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th>Answer</th>
+                        <th class="details-header">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="run-anthropic-Claude-Opus-5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5 (high thinking)" data-task="test/koan03/triage - wait for db connection refused" data-status="passed" data-duration="7752">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5 (high thinking)" title="Filter by run: Claude Opus 5 (high thinking)"><span itemprop="identifier">Claude Opus 5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="test/koan03/triage - wait for db connection refused" title="Filter by task: test/koan03/triage - wait for db connection refused"><span itemprop="name">test/koan03/triage - wait for db connection refused</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT7.752S">7.752s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_postgres_service_image",
+  "root_cause": "no_postgres_service_container"
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused">
+                                        <h4 itemprop="name">Missing Postgres Service Container in Docker Executor</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The docker executor declares only one image (circleci/node), so no PostgreSQL service container exists in the job. Evidence: the &#39;install dockerize&#39; step succeeded, so dockerize is present and functional; the wait step actually ran and produced repeated &#39;connection refused&#39; errors on 127.0.0.1:5432 for the full 1m timeout. Connection refused (not a hang or filtered port) means nothing is listening on port 5432 in the job&#39;s network namespace at all. A longer timeout would not help because there is no process that could ever start listening — nothing in the config launches Postgres. The port is correct for Postgres, and in CircleCI&#39;s docker executor secondary service images are reachable on localhost, so the host/port are appropriate once a service exists. Installing a postgres client via apt would only add client tooling, not a running server, and removing the wait step would mask the missing dependency rather than fix it. The pipeline definition is missing a second image entry (a Postgres service container) under the docker key.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_postgres_service_image&#34;,
+  &#34;root_cause&#34;: &#34;no_postgres_service_container&#34;
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_postgres_service_image&#34;,
+  &#34;root_cause&#34;: &#34;no_postgres_service_container&#34;
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>2311</dd><dt>Output</dt><dd>393</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P14084H21CV4J7VDP82Y52', this)" title="Copy Trace ID: 01M2P14084H21CV4J7VDP82Y52" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5 (high thinking)" data-task="build/koan05/triage - ruby missing after checkout" data-status="passed" data-duration="8160">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5 (high thinking)" title="Filter by run: Claude Opus 5 (high thinking)"><span itemprop="identifier">Claude Opus 5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="build/koan05/triage - ruby missing after checkout" title="Filter by task: build/koan05/triage - ruby missing after checkout"><span itemprop="name">build/koan05/triage - ruby missing after checkout</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT8.161S">8.161s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_ruby_orb",
+  "install_attempted": false
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout">
+                                        <h4 itemprop="name">No Ruby install ran; add the Ruby orb</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The frozen step list contains only environment spin-up, env var prep, checkout, and the failing `ruby -v` — there is no install step of any kind between checkout and `ruby -v`. The config&#39;s two comments (`# Add Orb here` under `orbs:` and `# Add step below to install Ruby version 2.6.3`) are placeholders only; the `orbs:` mapping is empty and no step was ever declared. So no Ruby installation was attempted during this run. The log confirms this: `/bin/bash: ruby: command not found` with exit code 127 means the binary is absent from the `cimg/base:stable` image, not that an install ran and failed or timed out (a timeout or failed download would appear as its own failed step and would not be a 0s failure). The two placeholder comments together point to the intended remedy: declare the Ruby orb under `orbs:` (e.g. `ruby: circleci/ruby@x.y`) and then invoke its install step with version 2.6.3. That is the single coherent change. Changing the base image is not indicated by the comment scaffolding, `apt` would not cleanly pin 2.6.3 on this image, and increasing a timeout is irrelevant since nothing timed out.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_ruby_orb&#34;,
+  &#34;install_attempted&#34;: false
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_ruby_orb&#34;,
+  &#34;install_attempted&#34;: false
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1186</dd><dt>Output</dt><dd>490</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P147TEEPYNPXPPTG6SZF5B', this)" title="Copy Trace ID: 01M2P147TEEPYNPXPPTG6SZF5B" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5 (high thinking)" data-task="build/koan06/triage - yarn offline cache miss" data-status="passed" data-duration="10525">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5 (high thinking)" title="Filter by run: Claude Opus 5 (high thinking)"><span itemprop="identifier">Claude Opus 5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="build/koan06/triage - yarn offline cache miss" title="Filter by task: build/koan06/triage - yarn offline cache miss"><span itemprop="name">build/koan06/triage - yarn offline cache miss</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT10.525S">10.525s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "cache_restored": false,
+  "checksum_target": "package.json",
+  "fix": "enable_restore_and_save_cache"
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss">
+                                        <h4 itemprop="name">Cache steps disabled; key on package.json</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The step list contains only Spin up environment, Preparing environment variables, Checkout code, and the failing Install Dependencies step — there is no &#34;Restoring Cache&#34; entry, which is consistent with both cache steps being commented out in the frozen config. So no cache was restored during this run: cache_restored = false. Because nothing was restored, ~/.cache/yarn was empty, and `yarn install --offline` refused to fetch from the network, producing the &#34;Couldn&#39;t find any versions for &#39;left-pad&#39; ... in our cache (possible versions are &#34;&#34;)&#34; error. Yarn&#39;s own hint to drop --offline would merely mask the fact that the cache machinery is entirely disabled, and it would not make subsequent runs faster or reproducible; the step list proves the real defect is the missing restore/save steps, not the flag. For the cache key: the log explicitly reports `info No lockfile found.`, so yarn.lock does not exist in the checkout. A `checksum` template can only be computed over a file that is actually present, so keying on yarn.lock (or on the cache directory itself) would fail; the only dependency manifest present is package.json, making it the correct checksum target. The single repair is therefore to uncomment both the restore_cache and save_cache steps and set their keys to something like `yarn-packages-{{ checksum &#34;package.json&#34; }}`, with paths: ~/.cache/yarn — i.e. enable_restore_and_save_cache.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;cache_restored&#34;: false,
+  &#34;checksum_target&#34;: &#34;package.json&#34;,
+  &#34;fix&#34;: &#34;enable_restore_and_save_cache&#34;
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;cache_restored&#34;: false,
+  &#34;checksum_target&#34;: &#34;package.json&#34;,
+  &#34;fix&#34;: &#34;enable_restore_and_save_cache&#34;
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1615</dd><dt>Output</dt><dd>695</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P14FSG48J5M235FWENKTFX', this)" title="Copy Trace ID: 01M2P14FSG48J5M235FWENKTFX" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5-_high-thinking_-test_koan07_triage---junit-written-not-published" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5 (high thinking)" data-task="test/koan07/triage - junit written not published" data-status="passed" data-duration="8313">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5 (high thinking)" title="Filter by run: Claude Opus 5 (high thinking)"><span itemprop="identifier">Claude Opus 5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="test/koan07/triage - junit written not published" title="Filter by task: test/koan07/triage - junit written not published"><span itemprop="name">test/koan07/triage - junit written not published</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT8.314S">8.314s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_store_test_results_and_store_artifacts",
+  "job_green": false,
+  "missing_store_artifacts": true,
+  "missing_store_test_results": true,
+  "results_produced": true
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5-_high-thinking_-test_koan07_triage---junit-written-not-published', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5-_high-thinking_-test_koan07_triage---junit-written-not-published">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5-_high-thinking_-test_koan07_triage---junit-written-not-published" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5-_high-thinking_-test_koan07_triage---junit-written-not-published">
+                                        <h4 itemprop="name">JUnit XML written but never collected: add store_test_results and store_artifacts</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The log line &#34;Wrote ~/project/results/test_results.xml&#34; confirms the JUnit XML file was written before the intentional `exit 1`, so a results file was produced (results_produced = true). The step list shows &#34;Run tests&#34; as FAILED and the log shows &#34;Exited with code exit status 1&#34;, so the job is red (job_green = false). Scanning the frozen config&#39;s steps, only `checkout` and a single `run` step are present — there is no `store_test_results` step (missing_store_test_results = true) and no `store_artifacts` step (missing_store_artifacts = true). To make results appear in the Tests tab, CircleCI needs `store_test_results` pointing at the results directory; to make the XML downloadable, it needs `store_artifacts`. Both are missing, so the single correct change adds both first-class steps (no orb required). Note that `store_test_results`/`store_artifacts` still run on failure only if configured with `when: always`, but per the task&#39;s option set the required change is adding both collection steps; removing `exit 1` or setting `upload: true` (not a real field here) would not surface the results, and adding only one of the two would leave either the Tests tab or the artifact missing. This fix is not expected to turn the job green — the `&lt;failure&gt;` element and `exit 1` are deliberate.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_store_test_results_and_store_artifacts&#34;,
+  &#34;job_green&#34;: false,
+  &#34;missing_store_artifacts&#34;: true,
+  &#34;missing_store_test_results&#34;: true,
+  &#34;results_produced&#34;: true
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_store_test_results_and_store_artifacts&#34;,
+  &#34;job_green&#34;: false,
+  &#34;missing_store_artifacts&#34;: true,
+  &#34;missing_store_test_results&#34;: true,
+  &#34;results_produced&#34;: true
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1635</dd><dt>Output</dt><dd>532</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5-_high-thinking_-test_koan07_triage---junit-written-not-published" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P14T2F6KMEPNC6ZSP726C5', this)" title="Copy Trace ID: 01M2P14T2F6KMEPNC6ZSP726C5" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5 (high thinking)" data-task="deploy/koan08/triage - deploy ran off production" data-status="passed" data-duration="6590">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5 (high thinking)" title="Filter by run: Claude Opus 5 (high thinking)"><span itemprop="identifier">Claude Opus 5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="deploy/koan08/triage - deploy ran off production" title="Filter by task: deploy/koan08/triage - deploy ran off production"><span itemprop="name">deploy/koan08/triage - deploy ran off production</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT6.590S">6.59s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "behaviour_correct": false,
+  "fix": "filters_branches_only_production",
+  "fix_target_job": "deploy",
+  "pipeline_green": true
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production">
+                                        <h4 itemprop="name">Green pipeline, but deploy lacks a production-only branch filter</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">All jobs succeeded, so the pipeline was green (pipeline_green = true). However, the intent was that deployment occurs only from the `production` branch, and the run shows `deploy` executing on branch `koans-08-branch-filters`, so the behaviour did not match intent (behaviour_correct = false). The job that ships something is `deploy` — `test-production` merely has &#39;production&#39; in its name and does not deploy, and `build` is harmless on any branch, so the single job to change is `deploy`. `requires` only expresses ordering between jobs, not branch gating, so relying on it would not help. The fix should be an allow-list (only `production`) rather than a deny-list of non-production branches, and it should be applied at the workflow&#39;s invocation of the job (under the `deploy:` entry in the workflow `jobs` list with a `filters: branches: only: production` block) rather than inside the job definition.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;behaviour_correct&#34;: false,
+  &#34;fix&#34;: &#34;filters_branches_only_production&#34;,
+  &#34;fix_target_job&#34;: &#34;deploy&#34;,
+  &#34;pipeline_green&#34;: true
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;behaviour_correct&#34;: false,
+  &#34;fix&#34;: &#34;filters_branches_only_production&#34;,
+  &#34;fix_target_job&#34;: &#34;deploy&#34;,
+  &#34;pipeline_green&#34;: true
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1672</dd><dt>Output</dt><dd>383</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P1526ABGPPK5QDQXCVPMST', this)" title="Copy Trace ID: 01M2P1526ABGPPK5QDQXCVPMST" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan03_triage---wait-for-db-connection-refused" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Sonnet 5 (extended thinking)" data-task="test/koan03/triage - wait for db connection refused" data-status="passed" data-duration="6258">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Sonnet 5 (extended thinking)" title="Filter by run: Claude Sonnet 5 (extended thinking)"><span itemprop="identifier">Claude Sonnet 5 (extended thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="test/koan03/triage - wait for db connection refused" title="Filter by task: test/koan03/triage - wait for db connection refused"><span itemprop="name">test/koan03/triage - wait for db connection refused</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT6.258S">6.258s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_postgres_service_image",
+  "root_cause": "no_postgres_service_container"
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan03_triage---wait-for-db-connection-refused', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan03_triage---wait-for-db-connection-refused">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan03_triage---wait-for-db-connection-refused" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan03_triage---wait-for-db-connection-refused">
+                                        <h4 itemprop="name">Missing Postgres Service Container in CircleCI Config</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The config only defines a single primary container (circleci/node) with no secondary &#39;postgres&#39; service image listed under the job&#39;s docker key. Since dockerize is waiting on localhost:5432, it needs a Postgres service running alongside the primary container. Without that service, nothing is listening on port 5432, so every connection attempt is refused, and the wait step runs for the full timeout before failing. Increasing the timeout would not help since nothing is listening on the port at all (connection refused, not a timeout waiting for readiness). Installing dockerize already succeeded, so that&#39;s not the issue. Removing the wait step would just mask the problem rather than fix the environment. The correct fix is to add a postgres service image to the job&#39;s docker list so that a database is actually available on port 5432 for dockerize to connect to.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_postgres_service_image&#34;,
+  &#34;root_cause&#34;: &#34;no_postgres_service_container&#34;
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_postgres_service_image&#34;,
+  &#34;root_cause&#34;: &#34;no_postgres_service_container&#34;
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>2311</dd><dt>Output</dt><dd>330</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan03_triage---wait-for-db-connection-refused" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P158M90TMJ76E88XK04RJD', this)" title="Copy Trace ID: 01M2P158M90TMJ76E88XK04RJD" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan05_triage---ruby-missing-after-checkout" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Sonnet 5 (extended thinking)" data-task="build/koan05/triage - ruby missing after checkout" data-status="passed" data-duration="5382">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Sonnet 5 (extended thinking)" title="Filter by run: Claude Sonnet 5 (extended thinking)"><span itemprop="identifier">Claude Sonnet 5 (extended thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="build/koan05/triage - ruby missing after checkout" title="Filter by task: build/koan05/triage - ruby missing after checkout"><span itemprop="name">build/koan05/triage - ruby missing after checkout</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT5.382S">5.382s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_ruby_orb",
+  "install_attempted": false
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan05_triage---ruby-missing-after-checkout', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan05_triage---ruby-missing-after-checkout">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan05_triage---ruby-missing-after-checkout" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan05_triage---ruby-missing-after-checkout">
+                                        <h4 itemprop="name">Ruby Install Missing in CircleCI Config</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The config.yml has two comments indicating where a Ruby orb and an install-Ruby step should be added, but neither was actually implemented—the orbs section is empty and no install step exists between checkout and &#39;ruby -v&#39;. The step list confirms only &#39;Spin up environment&#39;, &#39;Preparing environment variables&#39;, &#39;Checkout code&#39;, and the failing &#39;ruby -v&#39; ran; there is no step for installing Ruby or an orb-based setup. The log shows &#39;ruby: command not found&#39; with exit code 127, meaning the shell never found a ruby binary because none was installed. Since no installation step was present or executed in this run, install_attempted must be false. To fix this and get Ruby 2.6.3 working, the simplest and most direct approach is to add the circleci/ruby orb (e.g., circleci/ruby@x.y) in the orbs section and use its install command (like ruby/install with version 2.6.3) in the steps section, replacing the comment placeholder. This directly addresses the missing orb declaration and missing install step, aligning with the authoring comments&#39; intent.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_ruby_orb&#34;,
+  &#34;install_attempted&#34;: false
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_ruby_orb&#34;,
+  &#34;install_attempted&#34;: false
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1186</dd><dt>Output</dt><dd>409</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan05_triage---ruby-missing-after-checkout" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P15EQWS6DBW2CP4DX453MF', this)" title="Copy Trace ID: 01M2P15EQWS6DBW2CP4DX453MF" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan06_triage---yarn-offline-cache-miss" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Sonnet 5 (extended thinking)" data-task="build/koan06/triage - yarn offline cache miss" data-status="passed" data-duration="11842">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Sonnet 5 (extended thinking)" title="Filter by run: Claude Sonnet 5 (extended thinking)"><span itemprop="identifier">Claude Sonnet 5 (extended thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="build/koan06/triage - yarn offline cache miss" title="Filter by task: build/koan06/triage - yarn offline cache miss"><span itemprop="name">build/koan06/triage - yarn offline cache miss</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT11.842S">11.842s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "cache_restored": false,
+  "checksum_target": "package.json",
+  "fix": "enable_restore_and_save_cache"
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan06_triage---yarn-offline-cache-miss', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan06_triage---yarn-offline-cache-miss">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan06_triage---yarn-offline-cache-miss" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan06_triage---yarn-offline-cache-miss">
+                                        <h4 itemprop="name">Missing Yarn Cache Configuration Diagnosis</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">Both restore_cache and save_cache steps are commented out in the frozen config, so no cache mechanism is active at all during this run — cache_restored is false. The failing step&#39;s log explicitly states &#39;No lockfile found&#39;, meaning yarn.lock does not exist in the checked-out repository. Since a checksum function can only hash a file that actually exists in the workspace, the cache key must be based on package.json instead of yarn.lock. The Yarn error message suggests dropping --offline, but the step list shows the Install Dependencies step failed in 0s — an instant failure consistent with there being no cache at all (not a slow network fallback problem). Removing --offline would just mask the underlying issue by hitting the network every build, defeating the purpose of caching in this workflow. The actual root cause is that neither cache step is enabled, so dependencies are never restored from a warmed cache nor saved for future runs. The single correct repair is to uncomment and properly configure both the restore_cache and save_cache steps, keying them off a checksum of package.json (since that&#39;s the file confirmed present, while yarn.lock is confirmed absent), which will populate the Yarn cache directory before the offline install runs and persist it afterward.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;cache_restored&#34;: false,
+  &#34;checksum_target&#34;: &#34;package.json&#34;,
+  &#34;fix&#34;: &#34;enable_restore_and_save_cache&#34;
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;cache_restored&#34;: false,
+  &#34;checksum_target&#34;: &#34;package.json&#34;,
+  &#34;fix&#34;: &#34;enable_restore_and_save_cache&#34;
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1615</dd><dt>Output</dt><dd>1022</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Sonnet-5-_extended-thinking_-build_koan06_triage---yarn-offline-cache-miss" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P15M03WTD1C0QDTD5JRD4F', this)" title="Copy Trace ID: 01M2P15M03WTD1C0QDTD5JRD4F" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan07_triage---junit-written-not-published" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Sonnet 5 (extended thinking)" data-task="test/koan07/triage - junit written not published" data-status="passed" data-duration="5222">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Sonnet 5 (extended thinking)" title="Filter by run: Claude Sonnet 5 (extended thinking)"><span itemprop="identifier">Claude Sonnet 5 (extended thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="test/koan07/triage - junit written not published" title="Filter by task: test/koan07/triage - junit written not published"><span itemprop="name">test/koan07/triage - junit written not published</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT5.223S">5.223s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_store_test_results_and_store_artifacts",
+  "job_green": false,
+  "missing_store_artifacts": true,
+  "missing_store_test_results": true,
+  "results_produced": true
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan07_triage---junit-written-not-published', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan07_triage---junit-written-not-published">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan07_triage---junit-written-not-published" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan07_triage---junit-written-not-published">
+                                        <h4 itemprop="name">Missing result-collection steps in CircleCI config</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The job log confirms the XML file was written before exit 1 fired, so results_produced is true. The step list shows &#39;Run tests&#39; FAILED and the log shows exit code 1, so job_green is false. The config.yml has no store_test_results or store_artifacts steps anywhere in the steps list, so both missing_store_test_results and missing_store_artifacts are true. Since neither collection step exists, and the goal is to make results visible both in the Tests tab (requires store_test_results) and as a downloadable artifact (requires store_artifacts), the correct fix is to add both first-class steps: store_test_results with path ~/project/results and store_artifacts with path ~/project/results. Adding only one would satisfy only one of the two visibility requirements (Tests tab vs downloadable artifact), so the combined fix is necessary. No orb is available, so these must be added as plain CircleCI built-in steps. The exit 1 and failure element are intentional and not to be removed, and job_green remains false regardless of the fix.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_store_test_results_and_store_artifacts&#34;,
+  &#34;job_green&#34;: false,
+  &#34;missing_store_artifacts&#34;: true,
+  &#34;missing_store_test_results&#34;: true,
+  &#34;results_produced&#34;: true
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_store_test_results_and_store_artifacts&#34;,
+  &#34;job_green&#34;: false,
+  &#34;missing_store_artifacts&#34;: true,
+  &#34;missing_store_test_results&#34;: true,
+  &#34;results_produced&#34;: true
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1635</dd><dt>Output</dt><dd>431</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Sonnet-5-_extended-thinking_-test_koan07_triage---junit-written-not-published" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P15ZJ71938D66P0JGY4XVP', this)" title="Copy Trace ID: 01M2P15ZJ71938D66P0JGY4XVP" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Sonnet-5-_extended-thinking_-deploy_koan08_triage---deploy-ran-off-production" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Sonnet 5 (extended thinking)" data-task="deploy/koan08/triage - deploy ran off production" data-status="passed" data-duration="4180">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Sonnet 5 (extended thinking)" title="Filter by run: Claude Sonnet 5 (extended thinking)"><span itemprop="identifier">Claude Sonnet 5 (extended thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="deploy/koan08/triage - deploy ran off production" title="Filter by task: deploy/koan08/triage - deploy ran off production"><span itemprop="name">deploy/koan08/triage - deploy ran off production</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT4.181S">4.181s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "behaviour_correct": false,
+  "fix": "filters_branches_only_production",
+  "fix_target_job": "deploy",
+  "pipeline_green": true
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-deploy_koan08_triage---deploy-ran-off-production', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-deploy_koan08_triage---deploy-ran-off-production">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Sonnet-5-_extended-thinking_-deploy_koan08_triage---deploy-ran-off-production" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Sonnet-5-_extended-thinking_-deploy_koan08_triage---deploy-ran-off-production">
+                                        <h4 itemprop="name">Missing Branch Filter on Deploy Job</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">All jobs succeeded, so the pipeline itself reported GREEN. However, the intent was that deployment only happens from the `production` branch, yet `deploy` ran on `koans-08-branch-filters`. This means behaviour did not match intent. The fix should target the `deploy` job specifically (not build or test-production, which are fine to run on any branch). The fix should be an allow-list branch filter applied at the workflow invocation level (where deploy is called), restricting it to only run on `production`, rather than a deny-list or a filter embedded in the job definition itself. `requires` only enforces ordering/dependency, not branch restrictions, so relying on it would not fix the issue.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;behaviour_correct&#34;: false,
+  &#34;fix&#34;: &#34;filters_branches_only_production&#34;,
+  &#34;fix_target_job&#34;: &#34;deploy&#34;,
+  &#34;pipeline_green&#34;: true
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;behaviour_correct&#34;: false,
+  &#34;fix&#34;: &#34;filters_branches_only_production&#34;,
+  &#34;fix_target_job&#34;: &#34;deploy&#34;,
+  &#34;pipeline_green&#34;: true
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1672</dd><dt>Output</dt><dd>309</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Sonnet-5-_extended-thinking_-deploy_koan08_triage---deploy-ran-off-production" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P164NFQFNK3XFMEZC5AMZ3', this)" title="Copy Trace ID: 01M2P164NFQFNK3XFMEZC5AMZ3" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Haiku-4_5-_control_-test_koan03_triage---wait-for-db-connection-refused" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Haiku 4.5 (control)" data-task="test/koan03/triage - wait for db connection refused" data-status="passed" data-duration="4847">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Haiku 4.5 (control)" title="Filter by run: Claude Haiku 4.5 (control)"><span itemprop="identifier">Claude Haiku 4.5 (control)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="test/koan03/triage - wait for db connection refused" title="Filter by task: test/koan03/triage - wait for db connection refused"><span itemprop="name">test/koan03/triage - wait for db connection refused</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT4.848S">4.848s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_postgres_service_image",
+  "root_cause": "no_postgres_service_container"
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Haiku-4_5-_control_-test_koan03_triage---wait-for-db-connection-refused', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Haiku-4_5-_control_-test_koan03_triage---wait-for-db-connection-refused">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Haiku-4_5-_control_-test_koan03_triage---wait-for-db-connection-refused" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Haiku-4_5-_control_-test_koan03_triage---wait-for-db-connection-refused">
+                                        <h4 itemprop="name">Missing PostgreSQL Service Container in Docker Config</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">Analyzing the failed CircleCI job, the core issue is clear from the logs: the &#39;Wait for db&#39; step is attempting to connect to PostgreSQL at localhost:5432, but the connection is consistently refused throughout the entire timeout period. The step successfully times out (runs for full 1 minute) before failing, indicating dockerize itself is working correctly.</p>
+                                                <p class="para">The CircleCI job configuration shows only a single Node.js Docker image in the docker array. For PostgreSQL to be available at localhost:5432, it must be running in a service container. The current config has no service container defined.</p>
+                                                <p class="para">The log output &#39;dial tcp 127.0.0.1:5432: getsockopt: connection refused&#39; indicates nothing is listening on that port - this is not a timeout or network issue, it&#39;s a complete absence of the service.</p>
+                                                <p class="para">The root cause is that there is no PostgreSQL service container in the pipeline definition. The fix is to add a PostgreSQL service image as a secondary container in the docker array. This would make PostgreSQL available at localhost:5432 for the subsequent wait step to connect to.</p>
+                                                <p class="para">The other options don&#39;t address the actual problem: the timeout length is actually appropriate (it ran the full duration); there&#39;s no indication that postgres client tools are needed in the Node image; removing the wait step would eliminate error checking; and the port specification is correct for default PostgreSQL.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_postgres_service_image&#34;,
+  &#34;root_cause&#34;: &#34;no_postgres_service_container&#34;
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_postgres_service_image&#34;,
+  &#34;root_cause&#34;: &#34;no_postgres_service_container&#34;
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1776</dd><dt>Output</dt><dd>357</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Haiku-4_5-_control_-test_koan03_triage---wait-for-db-connection-refused" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P168R5RK653NRPSAQP84NT', this)" title="Copy Trace ID: 01M2P168R5RK653NRPSAQP84NT" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Haiku-4_5-_control_-build_koan05_triage---ruby-missing-after-checkout" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Haiku 4.5 (control)" data-task="build/koan05/triage - ruby missing after checkout" data-status="passed" data-duration="5654">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Haiku 4.5 (control)" title="Filter by run: Claude Haiku 4.5 (control)"><span itemprop="identifier">Claude Haiku 4.5 (control)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="build/koan05/triage - ruby missing after checkout" title="Filter by task: build/koan05/triage - ruby missing after checkout"><span itemprop="name">build/koan05/triage - ruby missing after checkout</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT5.655S">5.655s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_ruby_orb",
+  "install_attempted": false
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Haiku-4_5-_control_-build_koan05_triage---ruby-missing-after-checkout', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Haiku-4_5-_control_-build_koan05_triage---ruby-missing-after-checkout">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Haiku-4_5-_control_-build_koan05_triage---ruby-missing-after-checkout" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Haiku-4_5-_control_-build_koan05_triage---ruby-missing-after-checkout">
+                                        <h4 itemprop="name">Ruby Installation Missing - Add Orb Required</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The CircleCI job execution shows a clear sequence of events: the environment was spun up with the base image (cimg/base:stable), code was checked out, but then the `ruby -v` command failed with &#39;command not found&#39;. The step list shows only 4 steps executed, with no Ruby installation step between checkout and the `ruby -v` command. Looking at the config.yml, there are two comments indicating where declarations were meant to be made: one for &#39;Add Orb here&#39; and another for &#39;Add step below to install Ruby version 2.6.3&#39;. However, neither has been implemented in this frozen version. Since the ruby command was not found and there is no installation step in the executed steps list, no Ruby installation was actually attempted during this run. To fix the `ruby -v` command, we need to install Ruby 2.6.3. The most straightforward solution in CircleCI is to add the official Ruby orb at the top (ruby-lang/ruby) which provides Ruby installation capabilities, or alternatively add an installation step. Given the comment structure suggesting an orb should be declared, adding the Ruby orb would be the intended fix. However, examining the available fix options: &#39;add_ruby_orb&#39;, &#39;change_base_image&#39;, &#39;install_via_apt&#39;, and &#39;increase_timeout&#39;, the &#39;add_ruby_orb&#39; directly addresses installing Ruby through CircleCI&#39;s official orb mechanism, which is the cleanest solution for this scenario.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_ruby_orb&#34;,
+  &#34;install_attempted&#34;: false
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_ruby_orb&#34;,
+  &#34;install_attempted&#34;: false
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>914</dd><dt>Output</dt><dd>380</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Haiku-4_5-_control_-build_koan05_triage---ruby-missing-after-checkout" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P16DFPA4Y4N20BMDWFZ4AR', this)" title="Copy Trace ID: 01M2P16DFPA4Y4N20BMDWFZ4AR" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Haiku-4_5-_control_-build_koan06_triage---yarn-offline-cache-miss" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Haiku 4.5 (control)" data-task="build/koan06/triage - yarn offline cache miss" data-status="failed" data-duration="13393">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Haiku 4.5 (control)" title="Filter by run: Claude Haiku 4.5 (control)"><span itemprop="identifier">Claude Haiku 4.5 (control)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="build/koan06/triage - yarn offline cache miss" title="Filter by task: build/koan06/triage - yarn offline cache miss"><span itemprop="name">build/koan06/triage - yarn offline cache miss</span></td>
+                        <td class="status-failed clickable-filter clickable" data-filter-type="status" data-filter-value="failed" title="Filter by status: Failed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Failed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT13.394S">13.394s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><!-- [html-validate-disable-block no-inline-style: generated by go-diff] --><span>{&para;<br>  &#34;cache_restored&#34;: false,&para;<br>  &#34;checksum_target&#34;: &#34;</span><del style="background:#ffe6e6;">package.json</del><ins style="background:#e6ffe6;">yarn.lock</ins><span>&#34;,&para;<br>  &#34;fix&#34;: &#34;enable_restore_and_save_cache&#34;&para;<br>}</span></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Haiku-4_5-_control_-build_koan06_triage---yarn-offline-cache-miss', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Haiku-4_5-_control_-build_koan06_triage---yarn-offline-cache-miss">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Haiku-4_5-_control_-build_koan06_triage---yarn-offline-cache-miss" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Haiku-4_5-_control_-build_koan06_triage---yarn-offline-cache-miss">
+                                        <h4 itemprop="name">CircleCI Yarn Cache Configuration Triage</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The failed build job reveals several clues about the caching setup:</p>
+                                                <p class="para">1. **Cache Status**: The step list shows only 4 steps executed: &#39;Spin up environment&#39;, &#39;Preparing environment variables&#39;, &#39;Checkout code&#39;, and &#39;Installed Dependencies&#39; (which failed). Notably absent is any cache restoration step. Since both cache steps are commented out, no cache was restored during this run.</p>
+                                                <p class="para">2. **Missing Lockfile**: The job log explicitly states &#34;info No lockfile found.&#34; This is critical because Yarn uses a lockfile (typically `yarn.lock` or `package-lock.json`) to pin dependency versions. Without it, Yarn cannot find the exact version &#34;1.3.0&#34; of &#34;left-pad&#34; that the `package.json` specifies.</p>
+                                                <p class="para">3. **Why `--offline` Flag Fails**: The command uses `yarn install --offline`, which requires a pre-populated cache and a lockfile. Without a lockfile, Yarn cannot determine which packages to install, and without cache restoration, the offline installation fails. Yarn&#39;s suggestion to drop `--offline` would be a workaround, but the real issue is that the cache isn&#39;t being restored and the lockfile isn&#39;t being checked in.</p>
+                                                <p class="para">4. **Checksum Target**: The repository contains `package.json` (since Yarn is trying to resolve packages from it), but the critical missing file is `yarn.lock`. Looking at the available checksum targets in the schema, `yarn.lock` is explicitly listed as an option. This is the file that should be checksummed because: (a) it exists in the repository (implied by the need to cache dependencies), (b) it&#39;s the standard way Yarn tracks exact dependency versions, and (c) it&#39;s more stable than `package.json` for cache invalidation purposes.</p>
+                                                <p class="para">5. **The Fix**: The pipeline needs to:    - Uncomment and enable both `restore_cache` and `save_cache` steps    - Set the cache key to be based on `yarn.lock` checksum    - This will restore the cached yarn packages (stored in `~/.cache/yarn`) before attempting offline installation    - Then save the cache after successful installation</p>
+                                                <p class="para">The single most impactful change is to enable cache restoration and save with proper checksum targeting, which is captured by the `enable_restore_and_save_cache` fix option.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;cache_restored&#34;: false,
+  &#34;checksum_target&#34;: &#34;yarn.lock&#34;,
+  &#34;fix&#34;: &#34;enable_restore_and_save_cache&#34;
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;cache_restored&#34;: false,
+  &#34;checksum_target&#34;: &#34;package.json&#34;,
+  &#34;fix&#34;: &#34;enable_restore_and_save_cache&#34;
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1246</dd><dt>Output</dt><dd>596</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Haiku-4_5-_control_-build_koan06_triage---yarn-offline-cache-miss" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response does not match any of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P16K0EZB0TRKCGWZ3QG2NW', this)" title="Copy Trace ID: 01M2P16K0EZB0TRKCGWZ3QG2NW" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Haiku-4_5-_control_-test_koan07_triage---junit-written-not-published" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Haiku 4.5 (control)" data-task="test/koan07/triage - junit written not published" data-status="passed" data-duration="8188">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Haiku 4.5 (control)" title="Filter by run: Claude Haiku 4.5 (control)"><span itemprop="identifier">Claude Haiku 4.5 (control)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="test/koan07/triage - junit written not published" title="Filter by task: test/koan07/triage - junit written not published"><span itemprop="name">test/koan07/triage - junit written not published</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT8.189S">8.189s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_store_test_results_and_store_artifacts",
+  "job_green": false,
+  "missing_store_artifacts": true,
+  "missing_store_test_results": true,
+  "results_produced": true
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Haiku-4_5-_control_-test_koan07_triage---junit-written-not-published', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Haiku-4_5-_control_-test_koan07_triage---junit-written-not-published">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Haiku-4_5-_control_-test_koan07_triage---junit-written-not-published" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Haiku-4_5-_control_-test_koan07_triage---junit-written-not-published">
+                                        <h4 itemprop="name">CircleCI Job Missing Result Collection Steps</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The job runs a test command that creates a JUnit XML file at ~/project/results/test_results.xml and then exits with code 1. From the step list, the job is clearly FAILED (exit code 1). The log confirms the XML file was written successfully. However, examining the config.yml, there are no result-collection steps present. CircleCI requires explicit steps to capture and store test results and artifacts. The `store_test_results` step is needed to make test results appear in the Tests tab, and `store_artifacts` step is needed to make files available as downloadable artifacts. Since both are missing and the job exits with code 1, we need to determine what single fix would make the results visible. Adding both `store_test_results` and `store_artifacts` steps would accomplish this. The `store_test_results` step should point to the results directory, and `store_artifacts` should also be configured to store the results directory. The test results file was produced (it was successfully written to disk as confirmed by the log), but the job is not green (exit code 1). Both result-collection steps are missing from the config.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_store_test_results_and_store_artifacts&#34;,
+  &#34;job_green&#34;: false,
+  &#34;missing_store_artifacts&#34;: true,
+  &#34;missing_store_test_results&#34;: true,
+  &#34;results_produced&#34;: true
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_store_test_results_and_store_artifacts&#34;,
+  &#34;job_green&#34;: false,
+  &#34;missing_store_artifacts&#34;: true,
+  &#34;missing_store_test_results&#34;: true,
+  &#34;results_produced&#34;: true
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1287</dd><dt>Output</dt><dd>327</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Haiku-4_5-_control_-test_koan07_triage---junit-written-not-published" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P170315S9YDMDGGX6BB6FG', this)" title="Copy Trace ID: 01M2P170315S9YDMDGGX6BB6FG" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Haiku-4_5-_control_-deploy_koan08_triage---deploy-ran-off-production" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Haiku 4.5 (control)" data-task="deploy/koan08/triage - deploy ran off production" data-status="passed" data-duration="6953">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Haiku 4.5 (control)" title="Filter by run: Claude Haiku 4.5 (control)"><span itemprop="identifier">Claude Haiku 4.5 (control)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="deploy/koan08/triage - deploy ran off production" title="Filter by task: deploy/koan08/triage - deploy ran off production"><span itemprop="name">deploy/koan08/triage - deploy ran off production</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT6.954S">6.954s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "behaviour_correct": false,
+  "fix": "filters_branches_only_production",
+  "fix_target_job": "deploy",
+  "pipeline_green": true
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Haiku-4_5-_control_-deploy_koan08_triage---deploy-ran-off-production', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Haiku-4_5-_control_-deploy_koan08_triage---deploy-ran-off-production">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Haiku-4_5-_control_-deploy_koan08_triage---deploy-ran-off-production" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Haiku-4_5-_control_-deploy_koan08_triage---deploy-ran-off-production">
+                                        <h4 itemprop="name">CircleCI Deploy Job Lacks Production Branch Filter</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The pipeline executed successfully with all jobs completing without errors, making it technically &#39;green&#39; from a build perspective. However, the behavior violates the intended constraint that deployment should only occur from the `production` branch. The workflow ran on the `koans-08-branch-filters` branch, yet the `deploy` job still executed. This happens because the `deploy` job has no branch filter configured. The job relies only on `requires: [test-production]` for ordering, which ensures it runs after `test-production` completes, but doesn&#39;t restrict which branches can trigger it. To fix this, we need to add a branch filter to the `deploy` job invocation in the workflow. Following the preference for allow-list filters expressed at the workflow level (where jobs are invoked), the `deploy` job should have a `filters` section that only allows the `production` branch. This is the single point of control that will prevent deployments from non-production branches while maintaining the existing job definitions.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;behaviour_correct&#34;: false,
+  &#34;fix&#34;: &#34;filters_branches_only_production&#34;,
+  &#34;fix_target_job&#34;: &#34;deploy&#34;,
+  &#34;pipeline_green&#34;: true
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;behaviour_correct&#34;: false,
+  &#34;fix&#34;: &#34;filters_branches_only_production&#34;,
+  &#34;fix_target_job&#34;: &#34;deploy&#34;,
+  &#34;pipeline_green&#34;: true
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1260</dd><dt>Output</dt><dd>279</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Haiku-4_5-_control_-deploy_koan08_triage---deploy-ran-off-production" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M2P1782YSE0K127KS42P7EFE', this)" title="Copy Trace ID: 01M2P1782YSE0K127KS42P7EFE" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr></tbody>
+            </table>
+        </section>
+    </main>
+    <footer>
+          Generated by <span itemprop="creator" itemscope itemtype="https://schema.org/SoftwareApplication">
+                <a href="https://github.com/petmal/mindtrial" target="_blank" rel="noopener"
+                    title="Visit MindTrial source repository" itemprop="downloadUrl releaseNotes discussionUrl url"><span itemprop="name">MindTrial</span></a>
+                <span itemprop="softwareVersion">v0.0.0-20260914215844-06d6cc66b5b1&#43;dirty</span></span> on <span itemprop="dateCreated">Wed, 16 Sep 2026 14:16:09 -0700</span>.
+    </footer>
+</body>
+</html>

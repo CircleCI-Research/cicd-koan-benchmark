@@ -1,0 +1,42 @@
+#!/bin/bash -eo pipefail
+echo "CIRCLE_NODE_INDEX=$CIRCLE_NODE_INDEX CIRCLE_NODE_TOTAL=$CIRCLE_NODE_TOTAL"
+circleci tests glob "src/test_*.sh" | circleci tests split --split-by=name >/tmp/split.txt || true
+echo "Split list: $(tr '\n' ' ' </tmp/split.txt)"
+RAN=0
+for f in src/test_*.sh; do
+  echo "Running $f on node $CIRCLE_NODE_INDEX"
+  bash "$f"
+  RAN=$((RAN + 1))
+done
+EXPECTED=$(wc -l </tmp/split.txt | tr -d ' ')
+if [ -z "$EXPECTED" ] || [ "$EXPECTED" -eq 0 ]; then
+  EXPECTED=1
+fi
+if [ "$CIRCLE_NODE_TOTAL" -gt 1 ] && [ "$RAN" -ne "$EXPECTED" ]; then
+  echo "Ran $RAN file(s); split list had $EXPECTED"
+  exit 1
+fi
+
+--- parallel container index 0 ---
+CIRCLE_NODE_INDEX=0 CIRCLE_NODE_TOTAL=2
+Split list: src/test_goodbye.sh 
+Running src/test_goodbye.sh on node 0
+Goodbye
+Running src/test_hello.sh on node 0
+Hello
+Ran 2 file(s); split list had 1
+
+Exited with code exit status 1
+CircleCI received exit code 1
+
+--- parallel container index 1 ---
+CIRCLE_NODE_INDEX=1 CIRCLE_NODE_TOTAL=2
+Split list: src/test_hello.sh 
+Running src/test_goodbye.sh on node 1
+Goodbye
+Running src/test_hello.sh on node 1
+Hello
+Ran 2 file(s); split list had 1
+
+Exited with code exit status 1
+CircleCI received exit code 1

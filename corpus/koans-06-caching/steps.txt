@@ -1,0 +1,4 @@
+Spin up environment              SUCCESS  14s
+Preparing environment variables  SUCCESS  0s
+Checkout code                    SUCCESS  0s
+Install Dependencies             FAILED   0s

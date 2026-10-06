@@ -1,0 +1,757 @@
+task-config:
+  validation-rules:
+    case-sensitive: false
+    ignore-whitespace: true
+
+  tasks:
+  - name: "test/koan03/triage - wait for db connection refused"
+    prompt: |
+      Requirement: The job must provide the PostgreSQL dependency required by the
+      application before the database readiness check is expected to succeed.
+      Determine the root cause and the appropriate fix from the frozen
+      configuration and execution evidence below.
+
+      Frozen config from corpus/koans-03-databases/config.yml:
+      ```yaml
+      version: 2
+      jobs:
+        build:
+          docker:
+            - image: circleci/node
+          steps:
+            - checkout # check out the code in the project directory
+            - run: echo "hello world" # run the `echo` command
+            - run:
+                name: install dockerize # This is a utility that will attempt to connect to a database, in place of an application for this sample.
+                command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+                environment:
+                  DOCKERIZE_VERSION: v0.3.0
+            - run:
+                name: Wait for db # If no database is found in 1 minute the job will fail.
+                command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      ```
+
+      Frozen log from corpus/koans-03-databases/job.log:
+      ```text
+      #!/bin/bash -eo pipefail
+      dockerize -wait tcp://localhost:5432 -timeout 1m
+      2026/08/17 20:38:17 Waiting for host: localhost:5432
+      2026/08/17 20:38:17 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:38:22 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:38:27 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:38:32 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:38:37 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:38:42 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:38:47 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:38:52 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:38:57 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:39:02 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:39:07 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:39:12 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+      2026/08/17 20:39:17 Timeout after 1m0s waiting on dependencies to become available: [tcp://localhost:5432]
+
+      Exited with code exit status 1
+      CircleCI received exit code 1
+      ```
+
+    response-result-format:
+      type: object
+      additionalProperties: false
+      properties:
+        root_cause:
+          type: string
+          enum:
+            - no_postgres_service_container
+            - dockerize_not_installed
+            - wait_timeout_too_short
+            - wrong_wait_port
+            - node_image_missing_postgres_client
+        fix:
+          type: string
+          enum:
+            - add_postgres_service_image
+            - increase_timeout
+            - install_postgres_via_apt
+            - remove_wait_step
+            - change_wait_host
+      required: ["root_cause", "fix"]
+    expected-result:
+      - root_cause: no_postgres_service_container
+        fix: add_postgres_service_image
+
+  - name: "build/koan05/triage - ruby missing after checkout"
+    prompt: |
+      Requirement: The build must install Ruby version 2.6.3 before the Ruby
+      version check runs. Determine whether an installation was attempted and
+      which available configuration change satisfies that requirement.
+
+      Frozen config from corpus/koans-05-orbs/config.yml:
+      ```yaml
+      version: 2.1
+
+      orbs:
+        # Add Orb here
+
+      jobs:
+        build:
+          docker:
+            - image: cimg/base:stable
+          steps:
+            - checkout
+            # Add step below to install Ruby version 2.6.3
+
+            
+            - run: ruby -v
+
+      workflows:
+        run-jobs:
+          jobs:
+            - build
+      ```
+
+      Frozen log from corpus/koans-05-orbs/job.log:
+      ```text
+      #!/bin/bash -eo pipefail
+      ruby -v
+      /bin/bash: ruby: command not found
+
+      Exited with code exit status 127
+      CircleCI received exit code 127
+      ```
+
+    response-result-format:
+      type: object
+      additionalProperties: false
+      properties:
+        install_attempted: { type: boolean }
+        fix:
+          type: string
+          enum:
+            - add_ruby_orb
+            - change_base_image
+            - install_via_apt
+            - increase_timeout
+      required: ["install_attempted", "fix"]
+    expected-result:
+      - install_attempted: false
+        fix: add_ruby_orb
+
+  - name: "build/koan06/triage - yarn offline cache miss"
+    prompt: |
+      Requirement: The build must continue using the fixed `--offline` flag.
+      Configure caching so the required Yarn cache can be restored before
+      dependency installation and saved for subsequent builds. The cache key
+      must be based on the project's dependency manifest. Determine which cache
+      steps are missing and which file the key should checksum, subject to the
+      fixed offline constraint.
+
+      Frozen config from corpus/koans-06-caching/config.yml:
+      ```yaml
+      version: 2.1
+
+      jobs:
+        build:
+          docker:
+            - image: cimg/node:current
+          steps:
+            - checkout
+            # Uncomment below and set the key to point at the proper file
+            #- restore_cache:
+                #name: Restore Yarn Package Json Cache
+                #keys:            
+            - run:
+                name: Install Dependencies
+                command: yarn install --offline
+            # Uncomment below and set the key to point at the proper file
+            #- save_cache:
+                #name: Save Yarn Package Json Cache
+                #key: 
+                #paths:
+                  #- ~/.cache/yarn
+
+      workflows:
+        cache-save-and-restore:
+          jobs:
+            - build
+      ```
+
+      Frozen log from corpus/koans-06-caching/job.log:
+      ```text
+      #!/bin/bash -eo pipefail
+      yarn install --offline
+
+      yarn install v1.22.22
+      info No lockfile found.
+      [1/4] Resolving packages...
+      error Couldn't find any versions for "left-pad" that matches "1.3.0" in our cache (possible versions are ""). This is usually caused by a missing entry in the lockfile, running Yarn without the --offline flag may help fix this issue.
+      info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command.
+
+      Exited with code exit status 1
+      CircleCI received exit code 1
+      ```
+
+    response-result-format:
+      type: object
+      additionalProperties: false
+      properties:
+        cache_restored: { type: boolean }
+        checksum_target:
+          type: string
+          enum:
+            - package.json
+            - yarn.lock
+            - package-lock.json
+            - .cache/yarn
+        fix:
+          type: string
+          enum:
+            - enable_restore_and_save_cache
+            - drop_offline_flag
+            - checksum_yarn_lock
+            - restore_only
+            - save_only
+      required: ["cache_restored", "checksum_target", "fix"]
+    expected-result:
+      - cache_restored: false
+        checksum_target: package.json
+        fix: enable_restore_and_save_cache
+
+  - name: "test/koan07/triage - junit written not published"
+    prompt: |
+      Requirement: The test results produced by the test step must be displayed
+      in the test summary tab and the same results file must also be available
+      as an artifact. Determine the publication configuration and the observed
+      job state from the frozen configuration and execution evidence.
+
+      Frozen config from corpus/koans-07-test-summary/config.yml:
+      ```yaml
+      version: 2.1
+      jobs:
+        build:
+          docker:
+            - image: cimg/node:current
+          steps:
+            - checkout
+            - run:
+                name: Run tests
+                command: |
+                  mkdir -p ~/project/results
+                  printf '%s\n' \
+                    '<?xml version="1.0" encoding="UTF-8"?>' \
+                    '<testsuite name="koans" tests="1" failures="0" errors="0">' \
+                    '<testcase classname="koans" name="exports_results"/>' \
+                    '</testsuite>' \
+                    > ~/project/results/test_results.xml
+                  echo "Wrote ~/project/results/test_results.xml"
+                  exit 1
+      workflows:
+        build:
+          jobs:
+            - build
+      ```
+
+      Frozen log from corpus/koans-07-test-summary/job.log:
+      ```text
+      #!/bin/bash -eo pipefail
+      mkdir -p ~/project/results
+      printf '%s\n' \
+        '<?xml version="1.0" encoding="UTF-8"?>' \
+        '<testsuite name="koans" tests="1" failures="0" errors="0">' \
+        '<testcase classname="koans" name="exports_results"/>' \
+        '</testsuite>' \
+        > ~/project/results/test_results.xml
+      echo "Wrote ~/project/results/test_results.xml"
+      exit 1
+
+      Wrote ~/project/results/test_results.xml
+
+      Exited with code exit status 1
+      CircleCI received exit code 1
+      ```
+
+    response-result-format:
+      type: object
+      additionalProperties: false
+      properties:
+        results_produced: { type: boolean }
+        job_green: { type: boolean }
+        missing_store_test_results: { type: boolean }
+        missing_store_artifacts: { type: boolean }
+        fix:
+          type: string
+          enum:
+            - add_store_test_results_and_store_artifacts
+            - set_upload_true
+            - store_artifacts_only
+            - store_test_results_only
+            - remove_exit_1_only
+      required:
+        - results_produced
+        - job_green
+        - missing_store_test_results
+        - missing_store_artifacts
+        - fix
+    expected-result:
+      - results_produced: true
+        job_green: false
+        missing_store_test_results: true
+        missing_store_artifacts: true
+        fix: add_store_test_results_and_store_artifacts
+
+  - name: "deploy/koan08/triage - deploy ran off production"
+    prompt: |
+      Requirement: The deploy job must run only when the commit is on the
+      production branch. Determine whether the observed workflow satisfies that
+      requirement and identify the workflow configuration that controls the
+      deploy job's branch eligibility.
+
+      Frozen config from corpus/koans-08-branch-filters/config.yml:
+      ```yaml
+      version: 2.1
+
+      jobs:
+        build:
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - checkout
+            - run: echo "Building complete"
+        test-production:
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - checkout
+            - run: echo "Testing complete"
+        deploy:
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - checkout
+            - run: echo "Deploy complete"
+
+      workflows:
+        build-test-and-deploy:
+          jobs:
+            - build
+            - test-production:
+                requires:
+                  - build
+            - deploy:
+                requires:
+                  - test-production
+      ```
+
+      Frozen workflow from corpus/koans-08-branch-filters/workflow.txt:
+      ```text
+      pipeline:  #151
+      branch:    koans-08-branch-filters      
+      commit:    69ba97c "Freeze koans-08-branch-filters from CircleCI-Training-Koans."
+      trigger:   API
+
+      workflow: build-test-and-deploy   SUCCESS   1m 06s
+        build             SUCCESS   19s
+        test-production   SUCCESS   18s
+        deploy            SUCCESS   21s        
+
+      deploy job steps:
+        Spin up environment              SUCCESS  20s
+        Preparing environment variables  SUCCESS   0s
+        Checkout code                    SUCCESS   0s
+        echo "Deploy complete"           SUCCESS   0s
+      ```
+
+    response-result-format:
+      type: object
+      additionalProperties: false
+      properties:
+        pipeline_green: { type: boolean }
+        behaviour_correct: { type: boolean }
+        fix_target_job:
+          type: string
+          enum:
+            - deploy
+            - build
+            - test-production
+            - all_jobs
+        fix:
+          type: string
+          enum:
+            - filters_branches_only_production
+            - filters_branches_ignore_non_production
+            - filters_on_job_definition
+            - rely_on_requires
+            - nothing_wrong
+      required:
+        - pipeline_green
+        - behaviour_correct
+        - fix_target_job
+        - fix
+    expected-result:
+      - pipeline_green: true
+        behaviour_correct: false
+        fix_target_job: deploy
+        fix: filters_branches_only_production
+
+  - name: "test/koan04/triage - parallelism without split"
+    prompt: |
+      Requirement: The test suite must be divided across the configured parallel
+      nodes so that each node executes only its assigned portion of the suite.
+      Determine the configured parallelism, whether the suite actually split
+      across nodes, and the required configuration change from the frozen
+      artifacts.
+
+      Frozen config from corpus/koans-04-parallelism/config.yml:
+      ```yaml
+      version: 2.1
+
+      jobs:
+        test:
+          parallelism: 2
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - checkout
+            - run:
+                name: Run tests
+                command: |
+                  echo "CIRCLE_NODE_INDEX=$CIRCLE_NODE_INDEX CIRCLE_NODE_TOTAL=$CIRCLE_NODE_TOTAL"
+                  circleci tests glob "src/test_*.sh" | circleci tests split --split-by=name >/tmp/split.txt || true
+                  echo "Split list: $(tr '\n' ' ' </tmp/split.txt)"
+                  RAN=0
+                  for f in src/test_*.sh; do
+                    echo "Running $f on node $CIRCLE_NODE_INDEX"
+                    bash "$f"
+                    RAN=$((RAN + 1))
+                  done
+                  EXPECTED=$(wc -l </tmp/split.txt | tr -d ' ')
+                  if [ -z "$EXPECTED" ] || [ "$EXPECTED" -eq 0 ]; then
+                    EXPECTED=1
+                  fi
+                  if [ "$CIRCLE_NODE_TOTAL" -gt 1 ] && [ "$RAN" -ne "$EXPECTED" ]; then
+                    echo "Ran $RAN file(s); split list had $EXPECTED"
+                    exit 1
+                  fi
+
+      workflows:
+        test-workflow:
+          jobs:
+            - test
+      ```
+
+      Frozen log from corpus/koans-04-parallelism/job.log:
+      ```text
+      #!/bin/bash -eo pipefail
+      echo "CIRCLE_NODE_INDEX=$CIRCLE_NODE_INDEX CIRCLE_NODE_TOTAL=$CIRCLE_NODE_TOTAL"
+      circleci tests glob "src/test_*.sh" | circleci tests split --split-by=name >/tmp/split.txt || true
+      echo "Split list: $(tr '\n' ' ' </tmp/split.txt)"
+      RAN=0
+      for f in src/test_*.sh; do
+        echo "Running $f on node $CIRCLE_NODE_INDEX"
+        bash "$f"
+        RAN=$((RAN + 1))
+      done
+      EXPECTED=$(wc -l </tmp/split.txt | tr -d ' ')
+      if [ -z "$EXPECTED" ] || [ "$EXPECTED" -eq 0 ]; then
+        EXPECTED=1
+      fi
+      if [ "$CIRCLE_NODE_TOTAL" -gt 1 ] && [ "$RAN" -ne "$EXPECTED" ]; then
+        echo "Ran $RAN file(s); split list had $EXPECTED"
+        exit 1
+      fi
+
+      --- parallel container index 0 ---
+      CIRCLE_NODE_INDEX=0 CIRCLE_NODE_TOTAL=2
+      Split list: src/test_goodbye.sh 
+      Running src/test_goodbye.sh on node 0
+      Goodbye
+      Running src/test_hello.sh on node 0
+      Hello
+      Ran 2 file(s); split list had 1
+
+      Exited with code exit status 1
+      CircleCI received exit code 1
+
+      --- parallel container index 1 ---
+      CIRCLE_NODE_INDEX=1 CIRCLE_NODE_TOTAL=2
+      Split list: src/test_hello.sh 
+      Running src/test_goodbye.sh on node 1
+      Goodbye
+      Running src/test_hello.sh on node 1
+      Hello
+      Ran 2 file(s); split list had 1
+
+      Exited with code exit status 1
+      CircleCI received exit code 1
+      ```
+
+    response-result-format:
+      type: object
+      additionalProperties: false
+      properties:
+        suite_split: { type: boolean }
+        each_node_ran_full_suite: { type: boolean }
+        fix:
+          type: string
+          enum:
+            - use_circleci_tests_split
+            - increase_parallelism_only
+            - split_into_workflow_jobs
+            - drop_parallelism
+            - nothing_wrong
+      required: ["suite_split", "each_node_ran_full_suite", "fix"]
+    expected-result:
+      - suite_split: false
+        each_node_ran_full_suite: true
+        fix: use_circleci_tests_split
+
+  - name: "deploy/koan09/triage - deploy ran without beta tag"
+    prompt: |
+      Requirement: The workflow must remain green for the required beta-tagged
+      release flow, and the build, test, and deploy jobs must participate in that
+      tagged flow. Only tags matching the beta product pattern should trigger
+      the deployment; non-beta tags must not. Determine the affected workflow
+      scope and required tag-filter configuration from the frozen artifacts.
+
+      Frozen config from corpus/koans-09-tag-filters/config.yml:
+      ```yaml
+      version: 2.1
+
+      jobs:
+        build:
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - checkout
+            - run: echo "Building complete"
+        test:
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - checkout
+            - run: echo "Testing complete"
+        deploy:
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - checkout
+            - run: echo "Deploy complete"
+
+      workflows:
+        build-test-and-deploy:
+          jobs:
+            - build
+            - test:
+                requires:
+                  - build
+            - deploy:
+                requires:
+                  - test
+      ```
+
+      Frozen workflow from corpus/koans-09-tag-filters/workflow.txt:
+      ```text
+      pipeline:  #156
+      branch:    koans-09-tag-filters      
+      commit:    de37612 "Freeze koans-09-tag-filters from CircleCI-Training-Koans."
+      trigger:   API
+
+      workflow: build-test-and-deploy   SUCCESS   1m 02s
+        build             SUCCESS   22s
+        test              SUCCESS   4s
+        deploy            SUCCESS   29s        
+
+      deploy job steps:
+        Spin up environment                SUCCESS  28s
+        Preparing environment variables    SUCCESS   0s
+        Checkout code                      SUCCESS   1s
+        echo "Deploy complete"             SUCCESS   0s
+      ```
+
+    response-result-format:
+      type: object
+      additionalProperties: false
+      properties:
+        pipeline_green: { type: boolean }
+        behaviour_correct: { type: boolean }
+        fix_target_job:
+          type: string
+          enum:
+            - deploy
+            - build
+            - test
+            - all_jobs
+        fix:
+          type: string
+          enum:
+            - filters_tags_only_beta
+            - filters_branches_only_production
+            - filters_tags_allow_all
+            - filters_on_job_definition
+            - rely_on_requires
+            - nothing_wrong
+      required:
+        - pipeline_green
+        - behaviour_correct
+        - fix_target_job
+        - fix
+    expected-result:
+      - pipeline_green: true
+        behaviour_correct: false
+        fix_target_job: all_jobs
+        fix: filters_tags_only_beta
+
+  - name: "build/koan13/triage - workspace missing apps"
+    prompt: |
+      Requirement: Each platform build must make its generated application
+      available to the final deploy job through the workspace, and the deploy
+      job must be able to verify and upload all three applications. Determine
+      whether the builds and deploy succeed, whether the workspace contains the
+      required applications, and what workspace change satisfies the requirement.
+
+      Frozen config from corpus/koans-13-workspaces/config.yml:
+      ```yaml
+      version: 2.1
+
+      jobs:
+        build-linux:
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - run: mkdir -p app/linux
+            - run:
+                name: Generate app
+                command: echo app >> app/linux/app.linux
+            - run: cd ~/project/app && pwd && ls
+            - run: mkdir -p meta/linux && echo "platform=linux" > meta/linux/build.txt
+            - persist_to_workspace:
+                root: .
+                paths:
+                  - meta/linux
+
+        build-windows:
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - run: mkdir -p app/windows
+            - run:
+                name: Generate app
+                command: echo app >> app/windows/app.windows
+            - run: cd ~/project/app && pwd && ls
+            - run: mkdir -p meta/windows && echo "platform=windows" > meta/windows/build.txt
+            - persist_to_workspace:
+                root: .
+                paths:
+                  - meta/windows
+
+        build-mac:
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - run: mkdir -p app/mac
+            - run:
+                name: Generate app
+                command: echo app >> app/mac/app.mac
+            - run: cd ~/project/app && pwd && ls
+            - run: mkdir -p meta/mac && echo "platform=mac" > meta/mac/build.txt
+            - persist_to_workspace:
+                root: .
+                paths:
+                  - meta/mac
+
+        deploy:
+          docker:
+            - image: cimg/base:2022.10
+          steps:
+            - attach_workspace:
+                at: .
+            - run:
+                name: Verify apps present
+                command: |
+                  echo "Workspace contents:"
+                  find . -maxdepth 4 -type f | sort
+                  test -f app/linux/app.linux
+                  test -f app/windows/app.windows
+                  test -f app/mac/app.mac
+            - store_artifacts:
+                path: app
+                destination: apps
+
+      workflows:
+        build_and_deploy:
+          jobs:
+            - build-linux
+            - build-mac
+            - build-windows
+            - deploy:
+                requires:
+                  - build-linux
+                  - build-mac
+                  - build-windows
+      ```
+
+      Frozen log from corpus/koans-13-workspaces/job.log:
+      ```text
+      #!/bin/bash -eo pipefail
+      echo "Workspace contents:"
+      find . -maxdepth 4 -type f | sort
+      test -f app/linux/app.linux
+      test -f app/windows/app.windows
+      test -f app/mac/app.mac
+
+      Workspace contents:
+      ./meta/linux/build.txt
+      ./meta/mac/build.txt
+      ./meta/windows/build.txt
+
+      Exited with code exit status 1
+      CircleCI received exit code 1
+      ```
+
+      Frozen steps from corpus/koans-13-workspaces/steps.txt:
+      ```text
+      Spin up environment                SUCCESS  6s
+      Preparing environment variables    SUCCESS  0s
+      Attaching workspace                SUCCESS  0s
+      Verify apps present                FAILED   0s
+      Uploading artifacts                SUCCESS  0s
+      ```
+
+      Frozen workflow from corpus/koans-13-workspaces/workflow.txt:
+      ```text
+      pipeline:  #167
+      branch:    koans-13-workspaces
+      commit:    2f3e2e3
+      trigger:   API
+
+      workflow: build_and_deploy   FAILED
+        build-linux       SUCCESS   16s
+        build-mac         SUCCESS   6s
+        build-windows     SUCCESS   17s
+        deploy            FAILED    6s
+      ```
+
+    response-result-format:
+      type: object
+      additionalProperties: false
+      properties:
+        builds_green: { type: boolean }
+        deploy_green: { type: boolean }
+        workspace_had_apps: { type: boolean }
+        fix:
+          type: string
+          enum:
+            - persist_app_paths
+            - store_artifacts_on_builds_only
+            - fix_one_platform_only
+            - change_attach_only
+            - remove_verify_only
+      required:
+        - builds_green
+        - deploy_green
+        - workspace_had_apps
+        - fix
+    expected-result:
+      - builds_green: true
+        deploy_green: false
+        workspace_had_apps: false
+        fix: persist_app_paths

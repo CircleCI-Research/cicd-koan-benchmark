@@ -1,0 +1,5 @@
+Spin up environment                SUCCESS  6s
+Preparing environment variables    SUCCESS  0s
+Attaching workspace                SUCCESS  0s
+Verify apps present                FAILED   0s
+Uploading artifacts                SUCCESS  0s

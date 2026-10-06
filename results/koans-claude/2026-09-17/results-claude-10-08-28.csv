@@ -1,0 +1,2375 @@
+TraceID,Provider,Run,Model,Task,Status,Duration,InputTokens,OutputTokens,EstCostUSD,Answer,Details
+01M2R5EMV6BJ02YQ87QQN5BYAE,anthropic,Claude Opus 5 (high thinking),claude-opus-5,test/koan03/triage - wait for db connection refused,Passed,8.037s,2311,482,0.023605,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing Postgres Service Container in Docker Executor"",
+    ""Explanation"": [
+      ""The step list shows \""install dockerize\"" SUCCESS, so dockerize is present and executed (the log shows its output) — ruling out dockerize_not_installed. The wait step ran the full 1m and retried every 5s, each attempt failing with \""connection refused\"" rather than a hang/filtered port; connection refused means nothing is listening on 5432 at all, so the timeout being too short is not the issue (a longer timeout would just retry forever). The config's docker key lists only a single image, `circleci/node`, with no second entry for a Postgres service container. In CircleCI 2.0, additional images listed under `docker:` run as service containers exposed on localhost of the primary container; since none is defined, there is no database listening on localhost:5432. The port 5432 in the wait command matches the standard Postgres port, so the port is not wrong, and localhost is the correct host for CircleCI service containers, so changing the host wouldn't help. Removing the wait step would only mask the missing dependency, and installing Postgres via apt is not the CircleCI 2.0 pipeline-definition fix (and isn't what's \""missing from the pipeline definition\""). The correct change is to add a Postgres service image as a second entry under the job's `docker:` key.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 2311,
+      ""OutputTokens"": 482
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5EWPDK5HRM27MA4YPEG7V,anthropic,Claude Opus 5 (high thinking),claude-opus-5,build/koan05/triage - ruby missing after checkout,Passed,19.807s,1186,615,0.021305,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""No Ruby Install Ran; Add Ruby Orb"",
+    ""Explanation"": [
+      ""The step list for the run contains only: Spin up environment, Preparing environment variables, Checkout code, and the failing `ruby -v`. There is no Ruby installation step between checkout and `ruby -v`, and the config's two placeholders ('# Add Orb here' under `orbs:` and '# Add step below to install Ruby version 2.6.3') are comments only — nothing was ever declared or executed. So no Ruby installation was attempted in this run; the intent existed only as authoring comments."",
+      """",
+      ""The error confirms this: `/bin/bash: ruby: command not found` with exit code 127, which is the shell's 'command not found' status, not a version mismatch, permissions issue, or timeout. The base image `cimg/base:stable` intentionally ships without language runtimes, so Ruby is simply absent."",
+      """",
+      ""The fix is the one the comments were scaffolding for: declare the `circleci/ruby` orb in the empty `orbs:` block and invoke its install step pinned to 2.6.3 at the marked location before `ruby -v`. That places Ruby 2.6.3 on PATH for the subsequent step. Alternatives are worse fits: changing the base image to a `cimg/ruby` variant would work but ignores both placeholders and isn't the marked change; `apt` packages won't reliably give exactly 2.6.3 on this distro; and increasing a timeout is irrelevant since the step failed instantly (0s) with 127, not from hanging.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1186,
+      ""OutputTokens"": 615
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5FG1C8265BX2JVXG92GHD,anthropic,Claude Opus 5 (high thinking),claude-opus-5,build/koan06/triage - yarn offline cache miss,Passed,10.399s,1615,732,0.026375,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing Cache Steps Cause Offline Yarn Install Failure"",
+    ""Explanation"": [
+      ""1) cache_restored: The frozen step list contains only Spin up environment, Preparing environment variables, Checkout code, and the failing Installed Dependencies step. No 'Restore Yarn Package Json Cache' step appears, which matches the fact that both restore_cache and save_cache are commented out in the config. Therefore no cache was restored during this run, and ~/.cache/yarn was empty — which is exactly why `yarn install --offline` could not resolve left-pad@1.3.0 ('possible versions are \""\""')."",
+      """",
+      ""2) checksum_target: A checksum key can only be computed from a file that actually exists in the checkout. The log explicitly reports 'info No lockfile found.', so yarn.lock is absent from the repository and cannot be checksummed; package-lock.json is an npm artifact and is likewise not indicated, and .cache/yarn is a cache directory, not a repo file. The only dependency manifest the run demonstrably has is package.json (Yarn read it to learn about the left-pad@1.3.0 requirement). So the cache key must be keyed on package.json."",
+      """",
+      ""3) fix: Yarn's own message suggests dropping --offline, but that only masks the real problem: the pipeline is deliberately an offline-cache exercise, and the step list proves the cache machinery never ran. Restoring a populated ~/.cache/yarn (and saving it after a successful install) is what makes --offline viable. The single repair is to uncomment both the restore_cache and save_cache blocks and set their keys to a checksum of package.json.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1615,
+      ""OutputTokens"": 732
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5FT6CTM5CMZ1QQQZ8HW51,anthropic,Claude Opus 5 (high thinking),claude-opus-5,test/koan07/triage - junit written not published,Passed,8.355s,1635,596,0.023075,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""JUnit XML written but never collected — add store_test_results and store_artifacts"",
+    ""Explanation"": [
+      ""The \""Run tests\"" step's command writes the JUnit XML to ~/project/results/test_results.xml before exiting; the log confirms \""Wrote ~/project/results/test_results.xml\"", so a results file was produced (results_produced = true). The step list shows \""Run tests  FAILED\"" and the log shows \""Exited with code exit status 1\"" / \""CircleCI received exit code 1\"", so the job is red (job_green = false) — as instructed, this is reported as observed, not as a repaired pipeline would show. Scanning the frozen config's steps list, it contains only `checkout` and the single `run` step; there is no `store_test_results` (so nothing feeds the Tests tab) and no `store_artifacts` (so the XML is never uploaded as a downloadable artifact). Hence both missing_store_test_results and missing_store_artifacts are true. To satisfy both requirements — results in the Tests tab AND downloadable as an artifact — the single change must add both first-class steps (store_test_results with path: ~/project/results and store_artifacts with path: ~/project/results). Note that store_* steps still run after a failing command when configured (CircleCI runs them on job completion), so removing `exit 1` is not needed and is explicitly out of scope; there is no `upload` key in first-class CircleCI config, and adding only one of the two steps would leave half the requirement unmet. No orb (e.g., test-results orb) is available, so only these built-in steps apply.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1635,
+      ""OutputTokens"": 596
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5G2BGCFX8W8PQKDJ4KRZ7,anthropic,Claude Opus 5 (high thinking),claude-opus-5,deploy/koan08/triage - deploy ran off production,Passed,4.892s,1672,296,0.015760,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Deploy job lacks a production-only branch filter"",
+    ""Explanation"": [
+      ""All jobs succeeded, so the pipeline was green. However, the intent was that deployment only occurs from the `production` branch, and this run deployed from `koans-08-branch-filters`, so the behaviour is wrong. The job that actually ships is `deploy` — `test-production` merely names the branch but does not deploy, and `build` is generic. `requires` only enforces ordering, not branch gating, so relying on it would not help. The fix belongs in the workflow's invocation of `deploy` (where the job is invoked, not in the job definition), using a `filters.branches.only: production` allow-list rather than an `ignore` deny-list.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1672,
+      ""OutputTokens"": 296
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5G74D14Z9MS29W8WMQ9D5,anthropic,Claude Sonnet 5 (extended thinking),claude-sonnet-5,test/koan03/triage - wait for db connection refused,Passed,3.631s,2311,72,0.005342,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""placeholder"",
+    ""Explanation"": [
+      ""not needed""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 2311,
+      ""OutputTokens"": 72
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5GANX71PWD17CQ5Z4S9TY,anthropic,Claude Sonnet 5 (extended thinking),claude-sonnet-5,build/koan05/triage - ruby missing after checkout,Passed,7.247s,1186,422,0.006592,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Ruby Install Never Attempted - Add Orb Fix"",
+    ""Explanation"": [
+      ""The config.yml has two comments indicating where the ruby orb should be added and where a Ruby install step should be inserted, but neither was actually filled in. The step list shows only 'Spin up environment', 'Preparing environment variables', 'Checkout code', and 'ruby -v' - there is no Ruby installation step present between checkout and the ruby -v run. The job log confirms this: 'ruby: command not found' with exit code 127, meaning no ruby binary exists on the system at all. If an install had been attempted and failed, we'd expect to see an additional step in the step list (even if failed) or error output related to an install process. Since no such step exists, no installation was ever executed in this run - the comments were never acted upon. To fix this and get Ruby 2.6.3 working via ruby -v, the cleanest single change is to add the official circleci/ruby orb and use its ruby/install step (or a similar orb-provided command) at the marked location, specifying version 2.6.3. This directly targets the 'Add Orb here' and 'Add step below' comments in one coherent fix.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1186,
+      ""OutputTokens"": 422
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5GHRD8D05H6K8G2DAZAWJ,anthropic,Claude Sonnet 5 (extended thinking),claude-sonnet-5,build/koan06/triage - yarn offline cache miss,Passed,8.552s,1615,705,0.010280,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing Cache Steps Cause Offline Install Failure"",
+    ""Explanation"": [
+      ""The config's restore_cache and save_cache steps are entirely commented out, and the step list confirms only a single 'Installed Dependencies' step ran (no separate restore/save cache steps appeared), so no cache restore ever occurred during this run — cache_restored is false. The failure log explicitly states 'No lockfile found', meaning yarn.lock is absent from the checked-out repository; a checksum can only be computed against a file that actually exists, so the cache key must be based on package.json rather than yarn.lock (even though yarn.lock is the conventional choice, it doesn't exist here). The log's suggestion to drop --offline is a red herring: the real root cause is that no cache mechanism is active at all, not the offline flag itself — without a working cache, dropping --offline would just force a network install every time and mask the underlying CI caching bug. The correct fix is to uncomment and properly configure both the restore_cache and save_cache steps, keyed on {{ checksum \""package.json\"" }}, so that Yarn's offline cache directory is populated and reused across builds.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1615,
+      ""OutputTokens"": 705
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5GT3PYRNP3M2Z1QEEDFM0,anthropic,Claude Sonnet 5 (extended thinking),claude-sonnet-5,test/koan07/triage - junit written not published,Passed,4.938s,1635,428,0.007550,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing store_test_results and store_artifacts steps"",
+    ""Explanation"": [
+      ""The 'Run tests' step's log explicitly shows 'Wrote ~/project/results/test_results.xml' before exiting with code 1, so a results file was produced. The step list shows 'Run tests' as FAILED and the log shows 'Exited with code exit status 1', confirming the job did not finish green. Examining the config.yml, the steps list only contains 'checkout' and a single 'run' step — there is no 'store_test_results' step (which would populate the Tests tab) and no 'store_artifacts' step (which would make the XML downloadable as an artifact). Both are absent. Since no orb is available, only first-class CircleCI steps can be used: 'store_test_results' with a path pointing to the results directory, and 'store_artifacts' similarly. Since both collection mechanisms are missing and both are needed to satisfy the full requirement (visible in Tests tab AND downloadable artifact), the correct single fix is to add both steps together as one change to the config to expose the already-produced results.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1635,
+      ""OutputTokens"": 428
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5GYY237GS6EMB1KEDE38M,anthropic,Claude Sonnet 5 (extended thinking),claude-sonnet-5,deploy/koan08/triage - deploy ran off production,Passed,5.773s,1672,264,0.005984,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Deploy Branch Filter Issue"",
+    ""Explanation"": [
+      ""The workflow succeeded on branch 'koans-08-branch-filters', including deploy, but the intent is that deploy should only happen on 'production'. This means pipeline was green but behaviour did not match intent. The fix should target the deploy job in the workflow invocation, adding a branch filter that only allows the production branch (allow-list), rather than a deny-list excluding non-production branches, and rather than embedding branch logic in the job definition itself. Relying on 'requires' does not help since it only enforces ordering, not branch restriction.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1672,
+      ""OutputTokens"": 264
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5H4JG24PRFCYCNFMJ1S85,anthropic,Claude Haiku 4.5 (control),claude-haiku-4-5-20251001,test/koan03/triage - wait for db connection refused,Passed,3.238s,1776,239,0.002971,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing PostgreSQL Service Container in CircleCI Config"",
+    ""Explanation"": [
+      ""The CircleCI job is failing at the 'Wait for db' step because dockerize successfully installed and ran, but it could not establish a connection to localhost:5432. The error message 'connection refused' repeated for the full 1-minute timeout period indicates the port is not listening. Analysis of the config.yml shows that while the job defines a Node.js container, there is no PostgreSQL service container defined in the docker array. The config only specifies one container: 'image: circleci/node'. To connect to a PostgreSQL database on port 5432, a PostgreSQL service container must be added to the job's docker configuration. Without a running PostgreSQL container, the wait step will always fail since there is nothing listening on that port. The fix is to add a PostgreSQL service image to the docker array.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1776,
+      ""OutputTokens"": 239
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5H7QPKKJ65ZZV3NGK9S4A,anthropic,Claude Haiku 4.5 (control),claude-haiku-4-5-20251001,build/koan05/triage - ruby missing after checkout,Passed,5.153s,914,345,0.002639,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Ruby Installation Failure Triage"",
+    ""Explanation"": [
+      ""Analyzing the CircleCI job failure, the step list shows only 4 steps executed: Spin up environment, Preparing environment variables, Checkout code, and the failing `ruby -v` command. There are two authoring comments in the config indicating where Ruby installation should occur: one for adding an orb and one for adding an installation step. However, neither comment has been acted upon - no orb has been added and no installation step exists between checkout and the `ruby -v` command. The error message `/bin/bash: ruby: command not found` with exit code 127 confirms that Ruby is not installed in the current environment. The base image `cimg/base:stable` is a minimal CircleCI image that does not include Ruby by default. Therefore, `install_attempted` is false because no Ruby installation was actually attempted during this run - the comments were just placeholders. To fix this, we need to add Ruby installation capability. The most straightforward solution in CircleCI is to use the official Ruby orb, which handles Ruby installation elegantly. Alternatively, we could change to a base image that includes Ruby, install via apt-get, or increase timeouts, but the Ruby orb is the CircleCI-recommended approach for Ruby projects. Among the fix options, `add_ruby_orb` is the canonical solution that properly integrates Ruby support into this CircleCI configuration.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 914,
+      ""OutputTokens"": 345
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5HCRRPVK6C1GCWDPYQ663,anthropic,Claude Haiku 4.5 (control),claude-haiku-4-5-20251001,build/koan06/triage - yarn offline cache miss,Passed,11.068s,1246,470,0.003596,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Yarn Cache Misconfiguration Triage"",
+    ""Explanation"": [
+      ""The build job failed during `yarn install --offline` with error 'Couldn't find any versions for \""left-pad\""' and 'No lockfile found.' This indicates two critical issues: (1) No cache was restored (the step list shows only checkout succeeded before the install step failed, with no restore_cache step executed), and (2) the repository lacks a lockfile (yarn.lock, package-lock.json, or .cache/yarn), which is essential for offline installs."",
+      """",
+      ""Analyzing the frozen config: both cache steps are commented out. The restore_cache step never runs, so cache_restored is false. The log explicitly reports 'No lockfile found,' meaning yarn.lock doesn't exist. However, package.json must exist (it's the source of truth for dependencies). The --offline flag requires either a lockfile or a pre-populated cache."",
+      """",
+      ""The core problem: without a lockfile in the repository, yarn cannot resolve dependencies offline. The fix has two parts: (1) enable cache restore/save, (2) generate/commit the lockfile. Since we must choose one checksum target, yarn.lock is the standard lockfile for Yarn and represents the proper cached dependency state. However, since yarn.lock doesn't exist in the repo, we need package.json as the checksum source initially, and the proper fix is to both restore cache AND generate the lockfile. But the single most impactful change is to stop using --offline until cache is properly configured, or enable cache restore/save with package.json as checksum."",
+      """",
+      ""Given the schema requires one fix from the enum, 'enable_restore_and_save_cache' is correct. The checksum should target package.json since that's the file present in the repository (yarn.lock is missing). Cache was not restored (no restore step executed).""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1246,
+      ""OutputTokens"": 470
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5HQJN1MEQNBP9EAF3HPJX,anthropic,Claude Haiku 4.5 (control),claude-haiku-4-5-20251001,test/koan07/triage - junit written not published,Passed,12.203s,1287,351,0.003042,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI JUnit Results Visibility Analysis"",
+    ""Explanation"": [
+      ""The job runs a test that creates a JUnit XML file at ~/project/results/test_results.xml, as confirmed by both the log output ('Wrote ~/project/results/test_results.xml') and the step list showing the Run tests step executed (though FAILED). The job exits with code 1, making it not green. Examining the config, there are no store_test_results or store_artifacts steps present. The store_test_results step is needed to make the JUnit XML results appear in the Tests tab, and store_artifacts would make it available as a downloadable artifact. Since the task asks for the single change that makes results appear in both the Tests tab and as a downloadable artifact, we need both capabilities. The fix 'add_store_test_results_and_store_artifacts' adds both: store_test_results will parse and display the JUnit XML in the Tests tab, and store_artifacts will make it downloadable. The other options are insufficient: store_test_results_only wouldn't provide artifact download capability, store_artifacts_only wouldn't display in Tests tab, set_upload_true isn't applicable here, and remove_exit_1_only wouldn't solve the visibility problem.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1287,
+      ""OutputTokens"": 351
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5J3G0W133TWAJMQS5X4WX,anthropic,Claude Haiku 4.5 (control),claude-haiku-4-5-20251001,deploy/koan08/triage - deploy ran off production,Passed,6.645s,1260,261,0.002565,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Deploy job needs production branch filter"",
+    ""Explanation"": [
+      ""The pipeline run was triggered on branch 'koans-08-branch-filters' (not production) and all jobs succeeded, making the pipeline_green=true. However, the intended behavior is that deployment should only happen from the production branch. Currently, the deploy job has no branch filter, so it executed on the non-production branch, which is incorrect behavior (behaviour_correct=false). The deploy job ran successfully due to the requires constraint on test-production, but requires only expresses ordering, not branch filtering. To fix this and align with the stated preference for allow-list filtering at the workflow level rather than in job definitions, the deploy job needs a branch filter that restricts it to only the production branch. The fix should use filters with branches.only set to production, applied at the workflow level where deploy is invoked. This ensures deployment only happens from production while test-production can run on any branch (as evidenced by its name being conditional on branch rather than restricting it).""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1260,
+      ""OutputTokens"": 261
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5EMV6BJ02YQ87QQR3K5GT,bedrock,DeepSeek V3.2,deepseek.v3.2,test/koan03/triage - wait for db connection refused,Passed,2.238s,1062,191,0.001012,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing database service in CircleCI job"",
+    ""Explanation"": [
+      ""From the job log, the Wait for db step fails because dockerize cannot connect to a PostgreSQL database at localhost:5432. The CircleCI config shows only a single docker image (circleci/node) is declared for the job, meaning no PostgreSQL service is defined as an additional container. The pipeline expects a database to be available but hasn't started one, which is the root cause. The fix is to add a PostgreSQL service as a second docker image so that the job can reach it. The change must be made in the same job's docker list.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1062,
+      ""OutputTokens"": 191
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5EQ17NMM0Q2CJ39D8T7MT,bedrock,DeepSeek V3.2,deepseek.v3.2,build/koan05/triage - ruby missing after checkout,Passed,2.364s,318,143,0.000462,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Report install_attempted and fix for ruby -v"",
+    ""Explanation"": [
+      ""The job log shows 'ruby: command not found' and the step list only includes checkout before ruby -v. No step for installing Ruby appears in the log. The Docker image used is cimg/base:stable, which does not include Ruby by default. Since only the listed steps executed, no Ruby installation was attempted in this run.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 318,
+      ""OutputTokens"": 143
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5ESB4WCXFP1DHXTNVP1R4,bedrock,DeepSeek V3.2,deepseek.v3.2,build/koan06/triage - yarn offline cache miss,Failed,21.186s,560,1042,0.002275,"@@ -73,23 +73,16 @@
+ %22: %22
+-enable_
+ restore_
+ and_
+@@ -81,21 +81,11 @@
+ ore_
+-and_save_cache
++only
+ %22%0A%7D
+","{
+  ""Answer"": {
+    ""Title"": ""Cache restoration status and fix"",
+    ""Explanation"": [
+      ""The step list shows that 'Checkout code' succeeded but 'Installed Dependencies' failed. The log indicates that Yarn failed because there's no lockfile present and it's running in offline mode, so it can't fetch packages. The absence of a lockfile suggests that either a `yarn.lock` should exist but doesn't, or the cache that might have contained `node_modules` wasn't restored. Since the cache steps are commented out and their keys are unset, no cache was restored during this run. The cache should be keyed on a file that, when changed, invalidates the cache. Typically for Yarn, this is `yarn.lock`, but the log says 'No lockfile found,' so `yarn.lock` doesn't exist in the repository. However, the dependency specification is likely in `package.json`, which should exist. The cache key should be based on `package.json` because that's the file that defines dependencies and exists. The fix is to uncomment the cache steps and set the key to a checksum of `package.json`. Also, since `yarn.lock` is missing, running `yarn install --offline` will always fail because there's no local cache of packages. The correct fix is to run `yarn install` without `--offline` first to generate the lockfile and populate the cache, then save the cache. But the question asks for 'the single change that repairs the caching setup,' so we focus on enabling caching with the proper key. However, the log's suggestion about `--offline` is noted, but the step list shows the step is named 'Installed Dependencies' and is failing because there's no cache and no lockfile. The pipeline expects caching to work, so the fix is to enable caching and ensure the cache key is set correctly. However, if there's no lockfile, the cache might be empty initially, but after a successful install, it will save `~/.cache/yarn`. The single change should include both uncommenting and setting the key, but the question says 'the single change,' which likely means uncommenting and setting the key to the proper file. Also, we need to consider that the `--offline` flag might be inappropriate if there's no cache. But the question states: 'Decide whether a cache was restored during this run, which file in the repository the cache key should be keyed on given what the log reports about the repository's contents, and the single change that repairs the caching setup.' So the fix is to enable caching and set the key based on the existing dependency file. Since `yarn.lock` is missing, we use `package.json`. Additionally, we might need to remove the `--offline` flag to allow yarn to fetch packages when cache is missing, but that's not strictly about caching setup. However, the caching setup is broken because cache steps are commented and keys unset. The single change that repairs caching is to uncomment both cache steps and set the key to a checksum of `package.json`. Optionally, also remove `--offline` or adjust the install command, but that's a separate change. The frozen config shows the install step with `--offline`. The cache steps are commented. The single change could be to uncomment and set the key, but also the install command might need to run without `--offline` initially. However, the question might expect that with caching restored, the offline install would work if the cache is populated from a previous run. But since there's no lockfile, the cache might not be valid. Actually, Yarn caches packages in `~/.cache/yarn` based on versions resolved from the lockfile. Without a lockfile, the cache might not be correctly populated. But the cache step saves `~/.cache/yarn`, which contains downloaded packages, not the lockfile. The cache key should be based on the lockfile because when dependencies change, the cache should be invalidated. But the lockfile is missing, so perhaps the repository should have a lockfile, but it doesn't. Given the log says 'No lockfile found,' the cache key should be based on `package.json` as a fallback. The single change: uncomment both cache steps and set `key: yarn-cache-{{ checksum \""package.json\"" }}`. Also, consider that the install step might need to run without `--offline` on cache misses, but the question says 'the single change that repairs the caching setup,' implying we only modify the config to enable caching correctly. So we'll propose uncommenting and setting the key to `package.json`.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""restore_only\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 560,
+      ""OutputTokens"": 1042
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response does not match any of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5FE17P1K5X0A8C2QG09NV,bedrock,DeepSeek V3.2,deepseek.v3.2,test/koan07/triage - junit written not published,Failed,12.889s,551,714,0.001663,"@@ -9,12 +9,8 @@
+ %22: %22
+-add_
+ stor
+@@ -28,27 +28,12 @@
+ lts_
+-and_store_artifacts
++only
+ %22,%0A 
+","{
+  ""Answer"": {
+    ""Title"": """",
+    ""Explanation"": [
+      ""The XML file was written according to the log. The step list shows the job failed because the Run tests step exited with code 1. The config contains no store_test_results or store_artifacts steps. To make results appear in the Tests tab, store_test_results is required; store_artifacts is needed for them to be downloadable as an artifact. Since the question asks for a single change that makes results appear both in the Tests tab and as a downloadable artifact, the minimal change is to add store_artifacts as it can store the results file and make it downloadable; however, store_test_results is specifically for the Tests tab, and store_artifacts alone does not populate the Tests tab. But the instructions say 'pick the single change that makes the results appear in the Tests tab and as a downloadable artifact.' This implies both features, which would require two steps. Since only one change is allowed, the most direct for the Tests tab is store_test_results, but it does not make it downloadable as an artifact. However, store_artifacts makes the file downloadable as an artifact but does not appear in the Tests tab. The question might be ambiguous, but given the frozen config already writes the file, adding store_test_results with the path will make results appear in the Tests tab. Adding store_artifacts would make it downloadable. However, the schema expects a 'fix' choice among: 'store_test_results', 'store_artifacts', 'both_steps', or 'none'. Since only one change is allowed, but the requirement is for both appearances, perhaps 'both_steps' is not an option as it's two changes. Actually, the instruction says 'pick the single change' – likely meaning one of the two steps. But making results appear in the Tests tab requires store_test_results, and making them downloadable requires store_artifacts. To satisfy both with a single change, we cannot. However, store_test_results also stores the file as an artifact automatically? No, store_test_results does not make the file downloadable as a general artifact; it only stores it for the test results UI. However, in CircleCI, test results are also available for download from the Tests tab? Not as a pipeline artifact. To make it downloadable as an artifact, store_artifacts is needed. The question might be expecting 'both_steps' as the fix because adding both steps is a single change to the config (adding two steps). But 'both_steps' is a single fix type in the schema? The schema likely expects one of: 'store_test_results', 'store_artifacts', 'both_steps', 'none'. Given the context, the correct fix is to add both steps. But I need to infer from the instructions: the config currently has neither; to have results in Tests tab and as downloadable artifact, both steps are needed. So fix = 'both_steps'. However, the question says 'pick the single change' – maybe they consider adding both as one change (adding a block). I'll go with that.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""store_test_results_only\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 551,
+      ""OutputTokens"": 714
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response does not match any of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5FTM0P1YCSCRQE9PEAPZA,bedrock,DeepSeek V3.2,deepseek.v3.2,deploy/koan08/triage - deploy ran off production,Passed,6.311s,544,184,0.000678,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Pipeline Review: Branch Filtering"",
+    ""Explanation"": [
+      ""The pipeline is green because all jobs succeeded, but the behavior is wrong because the deployment ran on a non-production branch (koans-08-branch-filters), which contradicts the intent of deploying only from the production branch. The workflow should restrict the deploy job to the production branch. According to the instructions, the constraint should be expressed where the workflow invokes the job, i.e., by adding a branch filter to the deploy job in the workflow.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 544,
+      ""OutputTokens"": 184
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5G0SA5GGJNSKM498XE5GT,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,test/koan03/triage - wait for db connection refused,Passed,4m0.196s,1451,917,0.008404,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing Postgres service container"",
+    ""Explanation"": [
+      ""The CircleCI config defines a single primary container (`circleci/node`) and no additional service images. The failing step runs `dockerize -wait tcp://localhost:5432`, which repeatedly logs `connection refused` on 127.0.0.1:5432 and exits only after the full 1-minute timeout. Dockerize itself installed successfully, so the wait tool is present and the timeout is being honored. Because nothing in the pipeline ever starts a process that listens on port 5432, the only missing piece is a Postgres service container. Adding a second image under the job’s `docker` key (e.g. `circleci/postgres` or `postgres`) supplies that listener and is the single change that addresses the observed failure.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1451,
+      ""OutputTokens"": 917
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5QBBD1CG4Z6R78SGR1MH7,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,build/koan05/triage - ruby missing after checkout,Passed,10m31.579s,675,2328,0.015318,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Missing Ruby Orb"",
+    ""Explanation"": [
+      ""The executed CircleCI steps contain only environment spin-up, checkout, and the failing `ruby -v` command; the authoring comments were never turned into an orb declaration or an install step, so no Ruby installation occurred in this run (install_attempted = false). The image cimg/base:stable ships without Ruby, producing the observed 'command not found'. The two comments explicitly mark the places where the official Ruby orb should be declared and then invoked to install exactly version 2.6.3; adding that orb (and its corresponding install command) is therefore the single change that satisfies the required Ruby version. The other enumerated options are inconsistent with the comments or would not produce Ruby 2.6.3.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 675,
+      ""OutputTokens"": 2328
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R6AM45TMXJKV1CBCZJ4KVN,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,build/koan06/triage - yarn offline cache miss,Passed,1m11.482s,942,2594,0.017448,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Yarn Cache Failure Triage"",
+    ""Explanation"": [
+      ""The restore_cache and save_cache steps are fully commented out, their keys are unset, and the published step list jumps from Checkout code straight to Installed Dependencies. Therefore no CircleCI cache was restored on this run (cache_restored=false). Yarn reports “No lockfile found,” so yarn.lock is absent from the checkout and cannot be checksummed; package-lock.json is an npm artifact and .cache/yarn is the cache directory itself, not a repo file. The only existing dependency manifest that can be used as a cache key is package.json (checksum_target=package.json), which is also consistent with the commented step names (“Yarn Package Json Cache”). Yarn’s suggestion to drop --offline would let the install hit the network, but it would leave the caching setup broken. The single change that actually repairs caching is to uncomment both restore_cache and save_cache and key them on package.json (fix=enable_restore_and_save_cache).""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 942,
+      ""OutputTokens"": 2594
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R6CSY0ZQK2N6S7H24002ZN,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,test/koan07/triage - junit written not published,Passed,4m30.218s,985,1058,0.008318,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Test Results Triage"",
+    ""Explanation"": [
+      ""The frozen job log explicitly prints that the JUnit XML was written to ~/project/results/test_results.xml before the shell exits 1, so a results file was produced. The step list marks “Run tests” FAILED and CircleCI received exit code 1, so the job finished red (job_green is therefore false and must not be inferred from a hypothetical repaired pipeline). The supplied config.yml contains only checkout and a single run step; neither the first-class store_test_results step nor the first-class store_artifacts step is present, so both collection steps are missing. Because no orb is declared, the only way to surface the already-written XML in the Tests tab and also make it a downloadable artifact is to add both native steps (store_test_results for the Tests tab, store_artifacts for the Artifacts tab). Removing the deliberate exit 1 would turn the job green but would not publish anything; adding only one of the two store steps would satisfy only one of the two UI requirements. Hence the single required change is add_store_test_results_and_store_artifacts.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 985,
+      ""OutputTokens"": 1058
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R6N1TC567B360JCYRMRXEE,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,deploy/koan08/triage - deploy ran off production,Passed,2m33.053s,966,896,0.007308,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Deploy lacks production branch filter"",
+    ""Explanation"": [
+      ""The frozen workflow run reports every job as SUCCESS, so the pipeline is green. The stated intent is that deploy must run only on the production branch. The run was triggered on branch koans-08-branch-filters (explicitly not production) and deploy still executed, so behaviour is incorrect. requires only sequences jobs and does not gate them by branch; test-production is a test job that happens to mention a branch in its name and does not ship anything. The constraint therefore belongs on the deploy invocation in the workflow, expressed as an allow-list (branches.only: production) rather than a deny-list or a filter inside the job definition itself.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 966,
+      ""OutputTokens"": 896
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5EMV6BJ02YQ87QVBPCKWY,google,Gemini 3.1 Pro (SUB for 3.5 Pro),gemini-3.1-pro-preview,test/koan03/triage - wait for db connection refused,Passed,6.591s,1642,205,0.004924,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing PostgreSQL Service Container"",
+    ""Explanation"": [
+      ""The CircleCI job fails at the 'Wait for db' step because `dockerize` attempts to connect to `localhost:5432`, but the connection is repeatedly refused until the 1-minute timeout is reached. By reviewing the `.circleci/config.yml` file, we can see that the `docker` executor is configured with only a single image (`circleci/node`). Since there is no database service container running alongside the primary container, nothing is listening on port 5432. Adding a PostgreSQL service image to the `docker` executor block would make the database available at `localhost:5432`, resolving the issue.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1642,
+      ""OutputTokens"": 205
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5EV97VBHNZYNTJCJGWDD6,google,Gemini 3.1 Pro (SUB for 3.5 Pro),gemini-3.1-pro-preview,build/koan05/triage - ruby missing after checkout,Passed,9.329s,681,177,0.002778,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing Ruby Installation Step"",
+    ""Explanation"": [
+      ""The step list and job log show that the execution went directly from 'Checkout code' to running 'ruby -v', which failed with 'command not found'. This confirms that no step was executed to install Ruby, meaning an installation was not attempted in this run. Based on the configuration file's placeholder comments ('Add Orb here' and 'Add step below to install Ruby version 2.6.3'), the intended fix is to declare the CircleCI Ruby orb and use its installation command to install the specific version of Ruby required before running 'ruby -v'.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 681,
+      ""OutputTokens"": 177
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5F4CS56GGH82AB4D2H0PJ,google,Gemini 3.1 Pro (SUB for 3.5 Pro),gemini-3.1-pro-preview,build/koan06/triage - yarn offline cache miss,Passed,8.179s,982,215,0.003684,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""Fix Yarn Offline Cache Restore"",
+    ""Explanation"": [
+      ""Based on the step list, there is no cache restoration step before the dependency installation, meaning `cache_restored` is false. The build fails because `yarn install --offline` relies on the cache being present, but since the cache restore step is commented out, the cache is empty. To repair the caching setup and allow the `--offline` flag to work, both the `restore_cache` and `save_cache` steps need to be uncommented. Additionally, the log explicitly states 'No lockfile found.', indicating that `yarn.lock` is absent from the repository. Therefore, the cache key must be checksummed against `package.json` instead.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 982,
+      ""OutputTokens"": 215
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5FCCD3D840YYBCRW8DHNT,google,Gemini 3.1 Pro (SUB for 3.5 Pro),gemini-3.1-pro-preview,test/koan07/triage - junit written not published,Passed,10.054s,1031,224,0.003854,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Test Results and Artifacts Triage"",
+    ""Explanation"": [
+      ""Based on the provided configuration and job logs, the 'Run tests' step successfully creates a JUnit XML results file at '~/project/results/test_results.xml', so results are produced. However, the step explicitly exits with a code of 1, causing the job to fail (not green). The provided config lacks both the 'store_test_results' step (which populates the Tests tab) and the 'store_artifacts' step (which makes the file downloadable). To surface the generated results in both locations, both steps must be added to the configuration.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1031,
+      ""OutputTokens"": 224
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5FP6PZDSDFM9CRV9YQQDM,google,Gemini 3.1 Pro (SUB for 3.5 Pro),gemini-3.1-pro-preview,deploy/koan08/triage - deploy ran off production,Passed,6.05s,1033,184,0.003538,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Pipeline Review: Deploy Branch Filter"",
+    ""Explanation"": [
+      ""The pipeline executed successfully and all jobs passed, so the pipeline is green. However, the behavior is incorrect because the 'deploy' job ran on a non-production branch ('koans-08-branch-filters'). The intent was for deployments to only happen from the 'production' branch. To fix this according to best practices, we should use an allow-list by adding a branch filter (only: production) to the 'deploy' job within the workflow block.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1033,
+      ""OutputTokens"": 184
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5G1T9QDZGWTF5K9JME29V,google,Gemini 2.5 Flash (control),gemini-2.5-flash,test/koan03/triage - wait for db connection refused,Passed,9.889s,1223,249,0.000333,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Postgres Service Missing"",
+    ""Explanation"": [
+      ""The CircleCI job failed at the 'Wait for db' step with a 'connection refused' error on `tcp://localhost:5432`. This indicates that no service was listening on port 5432, which is the default port for PostgreSQL. Reviewing the `.circleci/config.yml` reveals that only one Docker image, `circleci/node`, is specified in the `docker` section for the 'build' job. There is no second service container defined for PostgreSQL. For `dockerize` to successfully connect to a PostgreSQL database, a PostgreSQL server must be running, typically as a separate service container in CircleCI's configuration. Since no such service container is present, `dockerize` is unable to establish a connection, leading to the timeout and job failure. The `root_cause` is the absence of a PostgreSQL service container.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1223,
+      ""OutputTokens"": 249
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5GBFAVVK2X34NT1DWGZD2,google,Gemini 2.5 Flash (control),gemini-2.5-flash,build/koan05/triage - ruby missing after checkout,Failed,13.522s,328,331,0.000248,"@@ -9,20 +9,25 @@
+ %22: %22
+-add_ruby_orb
++change_base_image
+ %22,%0A 
+","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Ruby Installation Fix"",
+    ""Explanation"": [
+      ""The CircleCI job failed because the `ruby` command was not found. The `frozen step list` and `frozen .circleci/config.yml` show that no steps were executed to install Ruby. The config contained a comment `# Add step below to install Ruby version 2.6.3`, but no such step was present in the actual run. The `docker` image used was `cimg/base:stable`, which is a minimal image and does not include Ruby by default. Therefore, no Ruby installation was attempted during this run."",
+      """",
+      ""To fix this and ensure `ruby -v` succeeds with Ruby 2.6.3, the most direct and 'single' change is to update the base Docker image. The `cimg/ruby` images are specifically designed for this purpose, providing a pre-installed Ruby environment. Changing `image: cimg/base:stable` to `image: cimg/ruby:2.6` (or `cimg/ruby:2.6.3` for the exact patch version) would make Ruby 2.6.x available immediately without requiring additional installation steps. This is a more efficient and idiomatic CircleCI approach than manually installing Ruby via `apt` or requiring multiple steps with an orb to achieve the same immediate availability.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""change_base_image\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 328,
+      ""OutputTokens"": 331
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response does not match any of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5GRNXH9QYHMH7MRZPK9QA,google,Gemini 2.5 Flash (control),gemini-2.5-flash,build/koan06/triage - yarn offline cache miss,Passed,17.205s,561,494,0.000381,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Cache Fix"",
+    ""Explanation"": [
+      ""The analysis of the CircleCI job artifacts reveals several key points:"",
+      """",
+      ""1.  **Cache Restoration (cache_restored):** The provided `.circleci/config.yml` explicitly shows both `restore_cache` and `save_cache` steps are commented out. The 'Frozen step list' also does not show any cache-related steps executing. Therefore, no cache was restored during this run."",
+      """",
+      ""2.  **Checksum Target (checksum_target):** The `yarn install --offline` command's log states \""info No lockfile found.\"" This indicates that `yarn.lock` is absent from the repository at the time of dependency installation. `package-lock.json` is for npm, not Yarn. The `package.json` file is always present in a Node.js project for Yarn to identify dependencies. Since `yarn.lock` is explicitly reported as missing, `package.json` is the appropriate file to use for generating a cache checksum, as it is present and defines the project's dependencies."",
+      """",
+      ""3.  **Fix for Caching Setup (fix):** The task is to identify 'the single change that repairs the caching setup.' Currently, the caching setup is entirely disabled because `restore_cache` and `save_cache` steps are commented out in the `config.yml`. The most direct repair to the *caching setup* itself is to enable both these steps. While the `yarn install --offline` flag combined with a missing `yarn.lock` is problematic (as Yarn would struggle to resolve dependencies deterministically even with a restored cache), the primary issue *regarding caching* is that caching is not enabled at all. Enabling `restore_cache` and `save_cache` (and configuring their keys, which would point to `package.json` as determined above) makes the caching mechanism functional. The prompt specifically warns against simply removing the `--offline` flag as the 'right change for this pipeline,' guiding the focus towards fixing the caching infrastructure.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 561,
+      ""OutputTokens"": 494
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5H9FKY3B2VFV36M7DHZ9N,google,Gemini 2.5 Flash (control),gemini-2.5-flash,test/koan07/triage - junit written not published,Passed,10.851s,575,518,0.000397,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Job Triage: Test Results and Artifacts"",
+    ""Explanation"": [
+      ""The analysis of the CircleCI job's behavior is based on the provided configuration, step list, and job log. "",
+      """",
+      ""1.  **Results Produced (`results_produced`):** The `Run tests` step's command explicitly uses `printf` to create an XML file at `~/project/results/test_results.xml`. The job log confirms this with the output `Wrote ~/project/results/test_results.xml`. Therefore, a results file was indeed produced."",
+      """",
+      ""2.  **Job Green (`job_green`):** The `Run tests` step's command explicitly includes `exit 1`. The frozen step list shows `Run tests FAILED`, and the job log confirms `Exited with code exit status 1`. This indicates the job did not complete successfully; hence, it was not green."",
+      """",
+      ""3.  **Missing `store_test_results` (`missing_store_test_results`):** Reviewing the `steps` section of the `build` job in the `config.yml` reveals only `checkout` and `run` steps. There is no `store_test_results` step present."",
+      """",
+      ""4.  **Missing `store_artifacts` (`missing_store_artifacts`):** Similarly, inspecting the `steps` section of the `build` job shows no `store_artifacts` step."",
+      """",
+      ""5.  **Fix (`fix`):** To make the test results appear in the 'Tests' tab of the CircleCI UI, the `store_test_results` step is required, pointing to the directory containing the JUnit XML file (`~/project/results`). To make the results available as a downloadable artifact, the `store_artifacts` step is required, also pointing to the same directory. Since both are desired outcomes, the appropriate fix is to add both `store_test_results` and `store_artifacts` steps to the configuration.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 575,
+      ""OutputTokens"": 518
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5HM2P8Q9PEQHANKK625ZG,google,Gemini 2.5 Flash (control),gemini-2.5-flash,deploy/koan08/triage - deploy ran off production,Passed,9.011s,585,387,0.000320,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Pipeline Behavior Analysis \u0026 Fix"",
+    ""Explanation"": [
+      ""The pipeline execution details clearly state that 'workflow: build-test-and-deploy SUCCESS' and 'overall: pipeline GREEN', indicating that all jobs within the workflow completed successfully without failures. Therefore, 'pipeline_green' is true. "",
+      """",
+      ""The stated intent is that 'deployment happens only from the `production` branch'. However, the workflow run was triggered on 'branch: koans-08-branch-filters' which is explicitly noted as 'NOT production', and despite this, the 'deploy' job successfully ran ('deploy SUCCESS'). This is also confirmed by 'overall: pipeline GREEN, behavior WRONG.' Thus, the pipeline's behavior did not match the intent, making 'behaviour_correct' false."",
+      """",
+      ""The core issue is the 'deploy' job running on a non-production branch. Therefore, the 'fix_target_job' is 'deploy'."",
+      """",
+      ""To correct this, a branch filter needs to be applied to the 'deploy' job to restrict its execution to only the 'production' branch. The prompt explicitly states to 'Prefer an allow-list over a deny-list, and prefer expressing the constraint where the workflow invokes the job rather than in the job's own definition.' Adding a `filters` block with `branches: only: production` to the 'deploy' job definition within the `workflows` section satisfies both these preferences. This corresponds to the `fix` option 'filters_branches_only_production'.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 585,
+      ""OutputTokens"": 387
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5EMV6BJ02YQ87QT6KT5QD,openai,GPT-5.6 Sol (high reasoning),gpt-5.6-sol,test/koan03/triage - wait for db connection refused,Passed,3.93s,1303,109,0.009785,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing PostgreSQL Service"",
+    ""Explanation"": [
+      ""The configuration defines only the CircleCI Node container and never starts a PostgreSQL service. The successful installation and execution of dockerize rule out a missing utility, while repeated connection refusals for the full minute indicate that nothing is listening on localhost:5432. The pipeline needs a PostgreSQL service image added to the job's docker executor.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1303,
+      ""OutputTokens"": 109
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5ERP15QYZEMD8QPQ6XREQ,openai,GPT-5.6 Sol (high reasoning),gpt-5.6-sol,build/koan05/triage - ruby missing after checkout,Failed,58.848s,548,729,0.024610,"@@ -9,20 +9,25 @@
+ %22: %22
+-add_ruby_orb
++change_base_image
+ %22,%0A 
+","{
+  ""Answer"": {
+    ""Title"": ""Ruby Installation Triage"",
+    ""Explanation"": [
+      ""No installation step appears in the executed step list, and the log shows Ruby was absent. The comments are non-executable. Changing the Docker image to `cimg/ruby:2.6.3` provides the requested Ruby version in one change.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""change_base_image\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 548,
+      ""OutputTokens"": 729
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response does not match any of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5GJ51E0R4JC08Q59W0DC1,openai,GPT-5.6 Sol (high reasoning),gpt-5.6-sol,build/koan06/triage - yarn offline cache miss,Passed,9.551s,795,396,0.015855,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""Repair Yarn Cache Setup"",
+    ""Explanation"": [
+      ""No cache was restored because both cache steps are commented out, and the step list contains no restore-cache step. Yarn explicitly reports that no lockfile exists, so `yarn.lock` cannot be checksummed; the cache key should use the existing `package.json`. The intended repair is to enable both restore and save cache steps with matching keys, rather than removing `--offline`.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 795,
+      ""OutputTokens"": 396
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5GVFHHNE5441HGAWSB7MJ,openai,GPT-5.6 Sol (high reasoning),gpt-5.6-sol,test/koan07/triage - junit written not published,Passed,7.283s,809,302,0.013105,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Results Triage"",
+    ""Explanation"": [
+      ""The log confirms that the JUnit XML file was written before the test step exited with status 1, so results were produced but the job was not green. The config contains neither `store_test_results` nor `store_artifacts`. Both first-class CircleCI steps must be added to publish the existing XML to the Tests tab and make it downloadable as an artifact.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 809,
+      ""OutputTokens"": 302
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5H2K56SR2Z5G47F71TGPV,openai,GPT-5.6 Sol (high reasoning),gpt-5.6-sol,deploy/koan08/triage - deploy ran off production,Passed,2.736s,805,102,0.007085,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Deploy Branch Filter Required"",
+    ""Explanation"": [
+      ""All jobs succeeded, so the pipeline was green. However, `deploy` ran on the non-production branch because `requires` controls ordering, not branch eligibility. The workflow invocation of `deploy` should use an allow-list branch filter permitting only `production`.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 805,
+      ""OutputTokens"": 102
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5H58P1BH9Z1SXSD330HBW,openai,GPT-5.6 Terra (high reasoning),gpt-5.6-terra,test/koan03/triage - wait for db connection refused,Passed,3.72s,1303,140,0.004286,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing PostgreSQL Service"",
+    ""Explanation"": [
+      ""The configuration defines only one Docker image, `circleci/node`, and no PostgreSQL service container. `dockerize` installed successfully and repeatedly reached `localhost:5432`, but every connection was refused for the full timeout, which shows nothing is listening there. The missing pipeline definition is a PostgreSQL service image alongside the primary Node image.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1303,
+      ""OutputTokens"": 140
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5H8WZXN2WFN4TKVJAQ84F,openai,GPT-5.6 Terra (high reasoning),gpt-5.6-terra,build/koan05/triage - ruby missing after checkout,Passed,3.379s,548,136,0.002728,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Ruby Installation Triage"",
+    ""Explanation"": [
+      ""The executed step list contains only environment setup, checkout, and `ruby -v`; there is no Ruby installation step. The configuration comments are inert and do not execute anything, which is confirmed by `/bin/bash: ruby: command not found`. To make `ruby -v` run with Ruby 2.6.3 on this Docker executor, declare the Ruby orb and add its Ruby 2.6.3 installation step; this corresponds to `add_ruby_orb`.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 548,
+      ""OutputTokens"": 136
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5HC6K2BY7HDY0RWDZVPW9,openai,GPT-5.6 Terra (high reasoning),gpt-5.6-terra,build/koan06/triage - yarn offline cache miss,Passed,4.63s,795,239,0.004458,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""Repair Yarn Cache Configuration"",
+    ""Explanation"": [
+      ""No cache was restored: the restore_cache step is commented out, and the frozen step list contains no cache-restore step. Yarn reports that no lockfile exists, so the cache key must use checksum of package.json rather than yarn.lock. The failure is consistent with running offline without a restored Yarn cache. The repair is to enable both restore_cache and save_cache, keyed by package.json and caching ~/.cache/yarn; removing --offline alone would not repair the intended cache setup.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 795,
+      ""OutputTokens"": 239
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5HGQAVQNQRZE1FP949R6K,openai,GPT-5.6 Terra (high reasoning),gpt-5.6-terra,test/koan07/triage - junit written not published,Passed,5.69s,809,344,0.005746,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Results Collection Triage"",
+    ""Explanation"": [
+      ""The test command creates `~/project/results/test_results.xml` and the log confirms it was written, so results were produced. The same command ends with `exit 1`, and the step list marks “Run tests” as FAILED; therefore the job is not green. The frozen config contains neither a `store_test_results` step nor a `store_artifacts` step. Adding both first-class CircleCI collection steps for `~/project/results` publishes the JUnit XML to the Tests tab and makes the file available as a downloadable artifact; it does not change the intentional failing exit status.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 809,
+      ""OutputTokens"": 344
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5HP95600V90143SJ8XP9Q,openai,GPT-5.6 Terra (high reasoning),gpt-5.6-terra,deploy/koan08/triage - deploy ran off production,Passed,3.28s,805,120,0.003050,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Restrict Deploy to Production"",
+    ""Explanation"": [
+      ""The pipeline was green because every workflow job succeeded. Its behavior was incorrect because `deploy` ran on `koans-08-branch-filters`, which is not `production`. `requires` only controls execution order and does not restrict branches. The branch allow-list belongs on the `deploy` workflow invocation, limiting it to `production`.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 805,
+      ""OutputTokens"": 120
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5HSFPMNMQYPZ8AN6TK6R1,openai,GPT-5 Mini (control),gpt-5-mini,test/koan03/triage - wait for db connection refused,Passed,9.091s,1307,636,0.005777,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Postgres service missing"",
+    ""Explanation"": [
+      ""The job step \""Wait for db\"" runs dockerize and repeatedly tries to connect to tcp://localhost:5432, but the log shows connection refused on 127.0.0.1:5432 until the 1m timeout is reached. The frozen config.yml lists only a single docker image (circleci/node) for the job and does not define any Postgres service container. Since there is no Postgres container started by the job, nothing is listening on port 5432, causing dockerize to fail with connection refused. The \""install dockerize\"" step succeeded, so the failure is not due to dockerize missing. Increasing the timeout or changing the wait host would not help because there is no database process to accept connections. The single necessary change is to add a Postgres service image to the job so a Postgres server is started and reachable at localhost:5432 during the job.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1307,
+      ""OutputTokens"": 636
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5J2BSCF57869PZJ823EWG,openai,GPT-5 Mini (control),gpt-5-mini,build/koan05/triage - ruby missing after checkout,Failed,15.043s,552,855,0.005958,"@@ -9,20 +9,25 @@
+ %22: %22
+-add_ruby_orb
++change_base_image
+ %22,%0A 
+","{
+  ""Answer"": {
+    ""Title"": ""No install attempted; change image to Ruby 2.6.3"",
+    ""Explanation"": [
+      ""The job ran using the Docker image cimg/base:stable and the only steps executed were checkout and then `ruby -v`. The log shows `/bin/bash: ruby: command not found`, so no Ruby binary was present. The config contains comments indicating where an orb or an install step should be added, but those are comments only and no installation step or orb usage was actually present in the run. Therefore no Ruby installation was attempted during this execution."",
+      """",
+      ""To make `ruby -v` succeed and report Ruby 2.6.3 with a single change, replace the base Docker image with one that already contains Ruby 2.6.3. For example, change the job's docker image from `cimg/base:stable` to `cimg/ruby:2.6.3`. That single edit ensures the runtime already has Ruby 2.6.3 installed and `ruby -v` will succeed. (Other valid single changes could be adding the Ruby orb or adding an install step, but swapping to a Ruby-specific image is the simplest one-line change that guarantees the requested Ruby version is present.)""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""change_base_image\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 552,
+      ""OutputTokens"": 855
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response does not match any of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5JH1X4KSK0GEM6TGBQRNW,openai,GPT-5 Mini (control),gpt-5-mini,build/koan06/triage - yarn offline cache miss,Passed,12.949s,799,921,0.006724,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""Enable cache keyed on package.json"",
+    ""Explanation"": [
+      ""No cache was restored in this run. The CircleCI config shows both restore_cache and save_cache steps are commented out (and their keys unset), so nothing could have been restored. The yarn log reports “No lockfile found.” — i.e. there is no yarn.lock in the checkout — so the only dependency manifest available for creating a checksum key is package.json. Yarn failed because the job runs yarn install --offline but the dependency cache was never restored, so offline install cannot find packages (left-pad). The single change that fixes this is to enable both restore_cache and save_cache and key them to a checksum of package.json (since yarn.lock is absent). This ensures the cache is saved after a successful run and restored on subsequent runs so yarn --offline can succeed. I did not choose dropping --offline because the job intends to use the local cache; enabling the cache is the minimal repair consistent with the pipeline's design. Also not chosen: checksum_yarn_lock, because yarn.lock is not present according to the log.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 799,
+      ""OutputTokens"": 921
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5JXPKQM9WB1KG1XHT7Z7H,openai,GPT-5 Mini (control),gpt-5-mini,test/koan07/triage - junit written not published,Passed,11.524s,813,870,0.006439,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Publish test results and artifacts"",
+    ""Explanation"": [
+      ""Evidence from the artifacts:"",
+      ""- The Run tests step writes a JUnit XML at ~/project/results/test_results.xml (the step prints “Wrote ~/project/results/test_results.xml”), so a results file was produced by the job."",
+      ""- The job finished non‑zero: the step list shows Run tests FAILED and the log shows \""Exited with code exit status 1\"" and \""CircleCI received exit code 1\""; therefore job_green is false."",
+      ""- The frozen config.yml contains only the checkout and the run step; it does not include the first‑class CircleCI steps store_test_results or store_artifacts, so both result-collection steps are missing."",
+      """",
+      ""Change that will expose the results in the Tests tab and as a downloadable artifact:"",
+      ""- Add the first‑class steps store_test_results and store_artifacts (pointing at the directory where the XML is written, e.g. ~/project/results). These are built‑in CircleCI steps (not orbs) and will publish the JUnit XML to the Tests tab and upload the files as build artifacts. Example snippet to add under steps after the Run tests step:"",
+      """",
+      ""  - store_test_results:"",
+      ""      path: ~/project/results"",
+      ""  - store_artifacts:"",
+      ""      path: ~/project/results"",
+      """",
+      ""This single change (adding both steps) is sufficient to make the JUnit results show in the Tests UI and to provide the results directory as downloadable artifacts. Note: the job will remain red because the run step exits 1 and the XML contains a failure element; job_green is reported as the actual run result (false).""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 813,
+      ""OutputTokens"": 870
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M2R5K8YR2C20JE1HBW24ADEC,openai,GPT-5 Mini (control),gpt-5-mini,deploy/koan08/triage - deploy ran off production,Passed,17.226s,808,1071,0.007638,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Add branch allow-list to deploy"",
+    ""Explanation"": [
+      ""Summary of evidence"",
+      ""- The workflow run was on branch: koans-08-branch-filters (not production)."",
+      ""- All jobs succeeded and the overall pipeline was GREEN."",
+      ""- The deploy job ran on the non-production branch (shown in the artifacts). The workflow's requires keys only express ordering; they do not restrict branches."",
+      """",
+      ""Why the behavior is wrong"",
+      ""- The intent is to deploy only from the production branch, but deploy has no branch filters configured in the workflow invocation, so it runs on every branch."",
+      ""- test-production is just a job name and does not prevent deploy from running on non-production branches."",
+      """",
+      ""Single job that must change"",
+      ""- The deploy job invocation in the workflow should be changed (not the job definition). This is where branch restrictions are expressed for that workflow run."",
+      """",
+      ""Recommended change (expresses the intent)"",
+      ""- Add an allow-list branch filter (only: production) to the deploy job entry in the workflow. Prefer an allow-list over a deny-list, and prefer placing the filter on the workflow job invocation rather than inside the job definition."",
+      """",
+      ""Example snippet to apply under workflows.build-test-and-deploy.jobs:"",
+      ""- deploy:"",
+      ""    requires:"",
+      ""      - test-production"",
+      ""    filters:"",
+      ""      branches:"",
+      ""        only:"",
+      ""          - production"",
+      """",
+      ""Resulting behavior after change"",
+      ""- deploy will run only when the pipeline is for the production branch. The other jobs (build and test-production) can continue to run on other branches if desired."",
+      """"
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 808,
+      ""OutputTokens"": 1071
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"

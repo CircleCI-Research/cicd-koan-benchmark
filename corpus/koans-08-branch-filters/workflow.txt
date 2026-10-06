@@ -1,0 +1,15 @@
+pipeline:  #151
+branch:    koans-08-branch-filters      
+commit:    69ba97c "Freeze koans-08-branch-filters from CircleCI-Training-Koans."
+trigger:   API
+
+workflow: build-test-and-deploy   SUCCESS   1m 06s
+  build             SUCCESS   19s
+  test-production   SUCCESS   18s
+  deploy            SUCCESS   21s        
+
+deploy job steps:
+  Spin up environment              SUCCESS  20s
+  Preparing environment variables  SUCCESS   0s
+  Checkout code                    SUCCESS   0s
+  echo "Deploy complete"           SUCCESS   0s

@@ -1,0 +1,34 @@
+version: 2.1
+
+jobs:
+  test:
+    parallelism: 2
+    docker:
+      - image: cimg/base:2022.10
+    steps:
+      - checkout
+      - run:
+          name: Run tests
+          command: |
+            echo "CIRCLE_NODE_INDEX=$CIRCLE_NODE_INDEX CIRCLE_NODE_TOTAL=$CIRCLE_NODE_TOTAL"
+            circleci tests glob "src/test_*.sh" | circleci tests split --split-by=name >/tmp/split.txt || true
+            echo "Split list: $(tr '\n' ' ' </tmp/split.txt)"
+            RAN=0
+            for f in src/test_*.sh; do
+              echo "Running $f on node $CIRCLE_NODE_INDEX"
+              bash "$f"
+              RAN=$((RAN + 1))
+            done
+            EXPECTED=$(wc -l </tmp/split.txt | tr -d ' ')
+            if [ -z "$EXPECTED" ] || [ "$EXPECTED" -eq 0 ]; then
+              EXPECTED=1
+            fi
+            if [ "$CIRCLE_NODE_TOTAL" -gt 1 ] && [ "$RAN" -ne "$EXPECTED" ]; then
+              echo "Ran $RAN file(s); split list had $EXPECTED"
+              exit 1
+            fi
+
+workflows:
+  test-workflow:
+    jobs:
+      - test

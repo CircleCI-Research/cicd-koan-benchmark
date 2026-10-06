@@ -1,0 +1,764 @@
+TraceID,Provider,Run,Model,Task,Status,Duration,InputTokens,OutputTokens,EstCostUSD,Answer,Details
+01M3A8GQ3WSCX0S3422PX5W3S8,bedrock,DeepSeek V3.2,deepseek.v3.2,test/koan03/triage - wait for db connection refused,Passed,6.91s,1466,296,0.001457,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Database Connection Failure Diagnosis"",
+    ""Explanation"": [
+      ""The 'Wait for db' step is failing because the CircleCI job configuration defines only a single Docker service image: `circleci/node`. This provides the primary build environment. The step's command, `dockerize -wait tcp://localhost:5432 -timeout 1m`, repeatedly attempts to connect to port 5432 on localhost. The log consistently shows 'connection refused,' indicating no service is listening on that port. The requirement specifies the job connects to a PostgreSQL database, but no PostgreSQL service container is declared as part of the `docker:` configuration for the job. Therefore, the root cause is that there is no PostgreSQL database running for the application (or the 'dockerize' check) to connect to. The correct fix is to add a PostgreSQL service container to the job's configuration, which will start a database instance that the `circleci/node` container can connect to via the Docker network. This satisfies the requirement to have the job finish green with the check still in place. Other potential fixes, like increasing the timeout, removing the step, or changing the host, do not address the core issue of a missing service or are contrary to the requirement.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1466,
+      ""OutputTokens"": 296
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8GXVVKMQS6EHHMNEZX106,bedrock,DeepSeek V3.2,deepseek.v3.2,build/koan05/triage - ruby missing after checkout,Passed,7.435s,670,345,0.001054,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Fixing Ruby Installation in CircleCI"",
+    ""Explanation"": [
+      ""The provided artifacts show a CircleCI job failing because the `ruby` command is not found, as evidenced by the 'command not found' error in `job.log` and the step list confirming no installation step before `ruby -v`. The CircleCI config (`config.yml`) currently has no Ruby installation step and no orb declared, despite a comment indicating where to add one. The requirement specifies Ruby 2.6.3 must be installed within the config while keeping the base Docker image (`cimg/base:stable`). The base image (cimg/base) is a minimal image and does not include Ruby by default. Examining the options: 'install_via_apt' would require adding `apt-get` commands directly in the config, which is possible but not the most efficient method for version management. 'change_base_image' is prohibited by the requirement. 'increase_timeout' is unrelated. 'add_ruby_orb' is the correct solution, as CircleCI's official orb (like `circleci/ruby`) provides a streamlined, best-practice method to install specific Ruby versions into any environment, including the given base image. Since the config's comment explicitly states where to add an orb, and no installation attempt was made in the provided job, the fix is to add the Ruby orb and use its command to install Ruby 2.6.3 before the `ruby -v` step.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 670,
+      ""OutputTokens"": 345
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8H5470KJWKJR0YWR1H4PW,bedrock,DeepSeek V3.2,deepseek.v3.2,build/koan06/triage - yarn offline cache miss,Failed,7.576s,940,350,0.001230,"@@ -48,20 +48,17 @@
+ %22: %22
+-package.json
++yarn.lock
+ %22,%0A 
+","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Yarn Offline Cache Failure"",
+    ""Explanation"": [
+      ""The frozen artifacts reveal a clear failure in the CircleCI workflow. The core requirement is to install dependencies using `yarn install --offline`. For offline installation to succeed, Yarn must have all necessary packages in its local cache (`~/.cache/yarn`). The provided CircleCI `config.yml` shows that both the `restore_cache` and `save_cache` steps are commented out and inactive. The `steps.txt` artifact confirms that no cache restoration step (like 'Restore Yarn Package Json Cache') occurred between 'Checkout code' and 'Install Dependencies'. Consequently, when the 'Install Dependencies' step ran, Yarn's local cache was empty, leading to the observed error in `job.log`: 'Couldn't find any versions for \""left-pad\"" ... in our cache'. The error explicitly states the cause is a missing cache, which offline mode requires. The `config.yml` comments indicate the cache key should be derived from a checksum of a repository file. Since Yarn is being used and the error mentions a missing lockfile, the logical checksum target is `yarn.lock`, which defines the exact dependency tree. The fix is to uncomment and configure both cache steps—restore to bring the cache into the job, and save to update it for future runs—because currently neither is being executed.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""yarn.lock\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 940,
+      ""OutputTokens"": 350
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response does not match any of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8HCH0M2E257TGW1BGNVWT,bedrock,DeepSeek V3.2,deepseek.v3.2,test/koan07/triage - junit written not published,Passed,7.986s,984,291,0.001148,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Test Results Triage"",
+    ""Explanation"": [
+      ""This triage analyzes the provided frozen artifacts against the specified requirement. The requirement states that the 'Run tests' step writes a JUnit XML file to `~/project/results/test_results.xml`, and this file must appear in the job's Test Summary tab and be exported as an artifact for later inspection. An analysis of the `config.yml` artifact shows the job writes the results file successfully (as confirmed by the `job.log` artifact, which shows the 'Wrote...' message), but the job fails due to the `exit 1` command. The config lacks both a `store_test_results` directive to upload results to the Test Summary tab and a `store_artifacts` step to save the file as a downloadable artifact. Therefore, the job did produce results but failed, and both reporting mechanisms are missing from the configuration. The fix must add both missing directives to fulfill the requirement, indicating the need for both `store_test_results` and `store_artifacts` steps.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 984,
+      ""OutputTokens"": 291
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8HMAMZH8YJ4ERC9A7BT78,bedrock,DeepSeek V3.2,deepseek.v3.2,deploy/koan08/triage - deploy ran off production,Passed,9.397s,866,340,0.001166,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Pipeline Compliance Analysis"",
+    ""Explanation"": [
+      ""I analyzed the frozen artifacts against the provided requirement. The requirement states: (1) The `deploy` job must run only for commits to the `production` branch. (2) There is no requirement for `build` or `test-production`. (3) On the `production` branch, the workflow must be green. Examining the `config.yml`, I found no branch filters defined for any job, including the `deploy` job. The `workflow.txt` artifact shows the pipeline ran on branch `koans-08-branch-filters`, not `production`, and the `deploy` job executed successfully. Therefore, the workflow finished green (`pipeline_green: true`). However, the `deploy` job ran on a non-production branch, which violates the first requirement (`behaviour_correct: false`). To correct this, a change must be made specifically to the `deploy` job's configuration within the workflow to add a branch filter restricting it to the `production` branch. The correct fix involves adding such a filter to the `deploy` job entry. No other changes to `build`, `test-production`, or workflow dependencies are required by the stated rules. This assessment is based solely on the provided artifacts and requirements, without external assumptions.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 866,
+      ""OutputTokens"": 340
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8HXGAYMAMQFR521SA0MZV,bedrock,DeepSeek V3.2,deepseek.v3.2,test/koan04/triage - parallelism without split,Failed,21.736s,1421,644,0.002072,"@@ -89,11 +89,10 @@
+ t%22: 
+-fals
++tru
+ e%0A%7D
+","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Parallel Test Job Analysis"",
+    ""Explanation"": [
+      ""I am triaging a failing CircleCI job based solely on the provided frozen artifacts. The requirement is that the test suite 'src/test_*.sh' is split across parallel nodes, with each node executing only its assigned files, covering the suite exactly once, without modifying the workflow."",
+      """",
+      ""My analysis:"",
+      ""1.  **Parallelism Value:** The job's `config.yml` clearly shows `parallelism: 2`."",
+      ""2.  **Job Configuration Analysis:** The script attempts to split the suite using `circleci tests glob` and `circleci tests split --split-by=name`, writing the assigned list for the node to `/tmp/split.txt`."",
+      ""3.  **Job Execution Log Analysis (`job.log`):** I examine the output of each parallel node:"",
+      ""    *   Both nodes (index 0 and 1) ran the command and printed their assigned `Split list`. Node 0's list was `src/test_goodbye.sh`. Node 1's list was `src/test_hello.sh`. This shows the suite *was* successfully split."",
+      ""    *   However, the `for f in src/test_*.sh; do` loop **iterates over all test files in the directory** on each node, regardless of the split list. The logs prove this: Node 0 ran both `goodbye` and `hello`. Node 1 also ran both `goodbye` and `hello`."",
+      ""    *   The script's validation logic compares the number of files actually run (`RAN`) with the number on the split list (`EXPECTED`). Since `RAN=2` and `EXPECTED=1` on both nodes, it correctly exits with status 1, causing the observed job failures."",
+      ""4.  **Answers to Explicit Questions:**"",
+      ""    *   `suite_split`: **True**. The split command worked, as evidenced by the unique, non-overlapping `Split list` printed for each node."",
+      ""    *   `each_node_ran_full_suite`: **True**. The loop logic caused every node to execute both `src/test_goodbye.sh` and `src/test_hello.sh`, as shown in the logs."",
+      ""    *   `fix`: The root cause is that the logic for *splitting* the tests (via `circleci tests split`) is disconnected from the logic for *executing* the tests (the `for` loop). To meet the requirement, the execution loop must be changed to iterate over the files in `/tmp/split.txt` instead of over `src/test_*.sh`. This specific change aligns with the `\""use_circleci_tests_split\""` option, as it corrects the job to use the CircleCI-provided split mechanism directly for execution.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""each_node_ran_full_suite\"": true,"",
+      ""  \""fix\"": \""use_circleci_tests_split\"","",
+      ""  \""suite_split\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""each_node_ran_full_suite\"": true,"",
+        ""  \""fix\"": \""use_circleci_tests_split\"","",
+        ""  \""suite_split\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1421,
+      ""OutputTokens"": 644
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response does not match any of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8JJQN2YSEPGD9VR58GSDQ,bedrock,DeepSeek V3.2,deepseek.v3.2,deploy/koan09/triage - deploy ran without beta tag,Failed,9.29s,952,321,0.001184,"@@ -85,16 +85,14 @@
+ %22: %22
+-all_jobs
++deploy
+ %22,%0A 
+","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Tag Deployment Triage"",
+    ""Explanation"": [
+      ""The requirement states that the `deploy` job must only run for tagged commits where the tag belongs to the beta product (e.g., 'beta-main-0.1.1'), and must not run for alpha tags or untagged branch pushes. Analyzing the frozen artifacts: The CircleCI config.yml shows the `deploy` job has no filtering conditions (like `filters: tags:` or branch rules); it is set to run whenever its predecessor (`test`) succeeds. The workflow run summary shows a successful (green) pipeline triggered on a branch named 'koans-09-tag-filters' with an API trigger, not a tag. The workflow ran the `deploy` job. Since the requirement demands that untagged branch pushes must NOT deploy, this run's behavior (deploying on a non-tagged branch) is incorrect. Therefore, the current configuration does not meet the requirement. To correct this, a filter must be added to the `deploy` job to restrict its execution. The required change is to add a tag filter that allows only beta tags, ensuring the next beta tag push ('beta-main-0.1.1') results in a green, deploying workflow.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_tags_only_beta\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_tags_only_beta\"","",
+        ""  \""fix_target_job\"": \""all_jobs\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 952,
+      ""OutputTokens"": 321
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response does not match any of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8JVT1VSX3VP50CZ3YZYM2,bedrock,DeepSeek V3.2,deepseek.v3.2,build/koan13/triage - workspace missing apps,Passed,11.079s,1381,531,0.001839,"{
+  ""builds_green"": true,
+  ""deploy_green"": false,
+  ""fix"": ""persist_app_paths"",
+  ""workspace_had_apps"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Workspace Build Artifact Triage"",
+    ""Explanation"": [
+      ""I analyzed the provided frozen artifacts to answer the questions strictly based on the evidence present."",
+      """",
+      ""1. **Evaluating Build Jobs (`builds_green`)**: The `workflow.txt` artifact shows that all three build jobs (`build-linux`, `build-mac`, `build-windows`) have a status of `SUCCESS`. Therefore, they all succeeded."",
+      ""2. **Evaluating Deploy Job (`deploy_green`)**: The `workflow.txt` artifact shows the `deploy` job status as `FAILED`, and the `job.log` artifact concludes with \""Exited with code exit status 1\"", confirming the failure."",
+      ""3. **Evaluating Workspace Contents (`workspace_had_apps`)**: The `job.log` artifact provides the output of the `find` command after workspace attachment. The listed files are only `./meta/linux/build.txt`, `./meta/mac/build.txt`, and `./meta/windows/build.txt`. No files matching `app/linux/app.linux`, `app/windows/app.windows`, or `app/mac/app.mac` are present. Therefore, the workspace did not contain any app files."",
+      ""4. **Identifying the Fix (`fix`)**: Reviewing the `config.yml` artifact, each `build-*` job creates an `app/` directory with its platform-specific app file (e.g., `app/linux/app.linux`). However, the `persist_to_workspace` configuration in each build job only includes the `meta/` directory (e.g., `- meta/linux`). The `app/` directories are never persisted. The `deploy` job attaches the workspace and expects to find these app files, causing the verification step to fail. To meet the requirement that all three app files are available in the deploy job, the app files must be persisted. The necessary fix is to include the `app/` paths in the `persist_to_workspace` steps of the build jobs. Of the provided enum options, `persist_app_paths` accurately describes this required change."",
+      """",
+      ""All conclusions are drawn exclusively from the provided artifacts, with no external assumptions.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""builds_green\"": true,"",
+      ""  \""deploy_green\"": false,"",
+      ""  \""fix\"": \""persist_app_paths\"","",
+      ""  \""workspace_had_apps\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""builds_green\"": true,"",
+        ""  \""deploy_green\"": false,"",
+        ""  \""fix\"": \""persist_app_paths\"","",
+        ""  \""workspace_had_apps\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1381,
+      ""OutputTokens"": 531
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8K6MABVT7KZSBN83FQ4HA,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,test/koan03/triage - wait for db connection refused,Passed,5.529s,1499,1021,0.009124,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing Postgres service container"",
+    ""Explanation"": [
+      ""The CircleCI config declares only a single primary container (`circleci/node`). There is no secondary Docker service image for PostgreSQL, so nothing is listening on localhost:5432. Dockerize installed and ran correctly; it immediately received `connection refused` on 127.0.0.1:5432 and then hit the configured 1m timeout. That is expected when no database process exists. The wait step must remain (per the requirement), so the job can only go green if a Postgres service container is added that accepts TCP connections on port 5432. Other candidate causes are contradicted by the artifacts: dockerize installed successfully, the timeout was not the limiting factor (nothing was ever listening), the port matches Postgres, and the node image does not need a Postgres client because dockerize only does a TCP dial.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1499,
+      ""OutputTokens"": 1021
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8KC14QFK3NDXZW3EFBWS6,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,build/koan05/triage - ruby missing after checkout,Passed,6.245s,712,1048,0.007712,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Ruby 2.6.3 Orb Fix"",
+    ""Explanation"": [
+      ""The provided CircleCI config.yml contains only comments indicating where an orb and an install step should be added; it does not actually declare any orb or execute any command that would install Ruby. The frozen job step list confirms this: after checkout the next (and failing) step is immediately `ruby -v`, with no intervening install step. The job.log output (`ruby: command not found`, exit 127) is therefore expected. Because the executor image must remain `cimg/base:stable` and the exact version 2.6.3 must be supplied from inside the config, the only option that satisfies the constraint is to add the official CircleCI Ruby orb (which can install a precise Ruby version on the existing base image). Changing the base image is forbidden, apt would not guarantee exactly 2.6.3, and a timeout increase is irrelevant to a missing binary.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 712,
+      ""OutputTokens"": 1048
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8KJ4A3J8YWJD9QYV6JMTD,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,build/koan06/triage - yarn offline cache miss,Passed,14.549s,959,2213,0.015196,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Yarn Offline Cache Triage"",
+    ""Explanation"": [
+      ""The job step list shows only environment setup, checkout, and then an immediate failure of Install Dependencies; no restore_cache step appears. The supplied config.yml has both restore_cache and save_cache fully commented out, so no CircleCI cache was restored before yarn ran. Hence cache_restored is false."",
+      """",
+      ""The requirement is a cache key based on a checksum of a repository file that changes when declared dependencies change. job.log reports “No lockfile found,” eliminating yarn.lock (and package-lock.json is an npm artifact). The only remaining repository file that declares dependencies is package.json; the config comments even label the cache “Yarn Package Json Cache.” Therefore checksum_target is package.json."",
+      """",
+      ""Because the --offline flag is immutable, the empty yarn cache cannot be populated from the network. Both the restore and save steps are absent from the job, so the required fix is to uncomment/enable both restore_cache and save_cache (enable_restore_and_save_cache).""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 959,
+      ""OutputTokens"": 2213
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8M0B1C5NWV5TZ0WJJCX9P,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,test/koan07/triage - junit written not published,Passed,12.105s,1045,1978,0.013958,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Results Reporting Triage"",
+    ""Explanation"": [
+      ""The frozen job.log shows the Run tests command created ~/project/results and wrote a well-formed JUnit XML file before executing exit 1, so results_produced is true. The same log and steps.txt both record a non-zero exit, therefore job_green is false. Inspection of the supplied config.yml reveals only checkout and a single run step; there is no store_test_results step (needed for the Test Summary tab) and no store_artifacts step (needed to export the XML as a downloadable job artifact). Among the allowed fixes, only adding both of those special steps satisfies the dual reporting requirement. Removing exit 1 would merely turn the job green and would not surface the results; adding only one of the two store steps would satisfy only one of the two reporting goals. The task statement explicitly limits the scope to result reporting and does not require the job to become green.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1045,
+      ""OutputTokens"": 1978
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8MC5BYF1AS6GD04K52T55,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,deploy/koan08/triage - deploy ran off production,Passed,14.202s,912,932,0.007416,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Deploy Branch-Filter Triage"",
+    ""Explanation"": [
+      ""The frozen workflow summary shows pipeline #151 finished SUCCESS (all three jobs green), so pipeline_green is true. The same run was triggered on branch koans-08-branch-filters, yet the deploy job still executed and succeeded. The requirement states that deploy must run only for commits to the production branch; therefore the observed behaviour is incorrect. The supplied config.yml attaches no branch filters to any workflow job, so deploy is scheduled on every branch. The only change that satisfies the requirement is to add a workflow-level branches.only: production filter to the deploy job entry (filters_branches_only_production). No filters are required on build or test-production, and relying solely on requires or placing filters on the job definition would not produce the needed branch restriction. After that single change the production-branch workflow remains green because the existing requires graph is otherwise unchanged.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 912,
+      ""OutputTokens"": 932
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8MT16J6JQ0PS9CKN30KM7,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,test/koan04/triage - parallelism without split,Passed,11.263s,1453,1440,0.011546,"{
+  ""each_node_ran_full_suite"": true,
+  ""fix"": ""use_circleci_tests_split"",
+  ""suite_split"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Parallel Test Split Failure"",
+    ""Explanation"": [
+      ""The config sets parallelism: 2 on the test job. The Run tests step on both nodes first computes a split (node 0 receives only src/test_goodbye.sh; node 1 receives only src/test_hello.sh). The subsequent for-loop, however, always iterates src/test_*.sh and therefore executes every file on every node. Both nodes therefore print the same two 'Running ...' lines, increment RAN to 2, fail the RAN-versus-EXPECTED check, and exit 1. Consequently the suite did not actually split (suite_split=false) and every node ran the full suite (each_node_ran_full_suite=true). The only change that satisfies the stated requirement (use the existing job, keep the workflow untouched, make each node run solely its assigned files, and turn the job green) is to consume the already-generated split list when deciding which scripts to execute, i.e. use_circleci_tests_split.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""each_node_ran_full_suite\"": true,"",
+      ""  \""fix\"": \""use_circleci_tests_split\"","",
+      ""  \""suite_split\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""each_node_ran_full_suite\"": true,"",
+        ""  \""fix\"": \""use_circleci_tests_split\"","",
+        ""  \""suite_split\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1453,
+      ""OutputTokens"": 1440
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8N516NECVSH6PZW7VEY2R,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,deploy/koan09/triage - deploy ran without beta tag,Passed,1m2.905s,1002,9539,0.059238,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_tags_only_beta"",
+  ""fix_target_job"": ""all_jobs"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI beta-tag deploy triage"",
+    ""Explanation"": [
+      ""The provided workflow run completed with status SUCCESS, so the pipeline finished green. However the run was triggered for branch koans-09-tag-filters (an untagged commit) and the deploy job executed, violating the rule that deploy may run only for beta tags such as beta-main-0.1.1. The checked-in config.yml attaches no filters to any job, therefore every job (including deploy) is scheduled for ordinary branch pipelines and is omitted from tag pipelines. Because deploy requires test and test requires build, a tag push will produce a deploying green workflow only when build, test and deploy all receive workflow-level filters that accept the beta tag pattern; applying a tags-only-beta filter (the conventional tags: only: /^beta-.*/ plus branches: ignore: /.*/) to every job satisfies the restriction on alpha tags and untagged pushes while still letting the three jobs run and succeed for beta-main-0.1.1.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_tags_only_beta\"","",
+      ""  \""fix_target_job\"": \""all_jobs\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_tags_only_beta\"","",
+        ""  \""fix_target_job\"": \""all_jobs\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1002,
+      ""OutputTokens"": 9539
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3A8Q2F102GDJVQDWXN1J5HE,bedrock,Grok 4.6 (xAI family),global.xai.grok-4.6,build/koan13/triage - workspace missing apps,Passed,6.247s,1424,1166,0.009844,"{
+  ""builds_green"": true,
+  ""deploy_green"": false,
+  ""fix"": ""persist_app_paths"",
+  ""workspace_had_apps"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI workspace missing app files"",
+    ""Explanation"": [
+      ""The workflow summary shows all three build jobs (build-linux, build-mac, build-windows) completed with SUCCESS, so builds_green is true. The same summary and the deploy step list show deploy FAILED (specifically on the 'Verify apps present' step), so deploy_green is false. The deploy job log prints the attached workspace contents as only ./meta/linux/build.txt, ./meta/mac/build.txt and ./meta/windows/build.txt; the three test -f checks for the app files therefore fail, so workspace_had_apps is false. Inspection of config.yml shows the root cause: each build job writes an app file under app/\u003cplatform\u003e/ but persist_to_workspace only lists the corresponding meta/\u003cplatform\u003e path. Consequently the apps never reach the workspace that deploy attaches. The only listed change that both populates the workspace with the three required app files and keeps the existing verify + store_artifacts steps (thereby satisfying the stated requirement that the files be present in deploy and that the workflow be green) is persist_app_paths.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""builds_green\"": true,"",
+      ""  \""deploy_green\"": false,"",
+      ""  \""fix\"": \""persist_app_paths\"","",
+      ""  \""workspace_had_apps\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""builds_green\"": true,"",
+        ""  \""deploy_green\"": false,"",
+        ""  \""fix\"": \""persist_app_paths\"","",
+        ""  \""workspace_had_apps\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1424,
+      ""OutputTokens"": 1166
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"

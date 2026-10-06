@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MindTrial - Run Results</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --background-color: #f7f7f7;
+            --text-color: #333;
+            --header-color: #444;
+            --table-bg: #fff;
+            --table-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --row-hover-bg: #f1f9ff;
+            --row-even-bg: #f2f2f2;
+            --row-odd-bg: #ffffff;
+            --success-bg: #d4edda;
+            --success-text: #155724;
+            --failure-bg: #fff3cd;
+            --failure-text: #856404;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+            --skipped-bg: #e2e3e5;
+            --skipped-text: #383d41;
+            --border-color: #e0e0e0;
+             
+            --matrix-header-size: 120px;  
+            --matrix-header-fudge: 4px;   
+            --matrix-cell-size: 60px;    
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 1em;
+        }
+        h1, h2 {
+            text-align: center;
+            color: var(--header-color);
+        }
+        h1 { margin-bottom: 0.2em; }
+        h2 { margin-top: 1.5em; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2em;
+            box-shadow: var(--table-shadow);
+            background-color: var(--table-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        thead th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            position: relative;
+        }
+    
+     
+    table:not(.matrix-table) tbody tr:nth-child(even) { background-color: var(--row-even-bg); }
+    table:not(.matrix-table) tbody tr:nth-child(odd) { background-color: var(--row-odd-bg); }
+    table:not(.matrix-table) tbody tr:hover { background-color: var(--row-hover-bg); }
+        .status-passed { background-color: var(--success-bg); color: var(--success-text); font-weight: bold; }
+        .status-failed { background-color: var(--failure-bg); color: var(--failure-text); font-weight: bold; }
+        .status-error { background-color: var(--error-bg); color: var(--error-text); font-weight: bold; }
+        .status-skipped { background-color: var(--skipped-bg); color: var(--skipped-text); font-weight: bold; }
+    .details { cursor: pointer; color: var(--primary-color); font-weight: 600; text-decoration: underline; background: none; border: none; padding: 0; font-size: 0.95em; }
+        .details:focus { outline: 2px solid var(--primary-color); }
+    .details-content { display: none; background-color: #fafafa; border: 1px solid var(--border-color); margin-top: 8px; padding: 14px 16px; font-size: 0.95em; border-radius:6px; max-width:900px; }
+    .details-content section { margin-top: 1.1em; }
+    .details-content section:first-of-type { margin-top: 0; }
+    .details-content h4 { margin: 0 0 0.35em 0; color: var(--header-color); font-size: 1.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+     
+    .details-content summary { white-space: nowrap; cursor: pointer; }
+    .details-content details { margin: 0.4em 0; }
+      
+     .details-content details summary { list-style:none; cursor:pointer; position:relative; padding-left:1.1em; }
+     .details-content details summary::-webkit-details-marker { display:none; }
+    .details-content details summary:before { content:'▶'; position:absolute; left:0; top:0.12em; font-size:0.92em; line-height:1; }
+     .details-content details[open] summary:before { content:'▼'; }
+      
+     .details-content details.explanation { padding-left:1.1em; }
+     .details-content details.explanation summary { padding-left:0; }
+     .details-content details.explanation summary:before { left:-1.1em; }
+     .details-content details.explanation .explanation-body { margin-left:0; }
+     
+    .details-content ol.expected-answers { margin-left:1.2em; }
+    .details-content ol.expected-answers li::marker { font-weight:700; font-size:0.8em; color:#555; }
+    .section-answer { border-left: 4px solid var(--primary-color); padding-left: 10px; }
+    .section-validation { border-left: 4px solid #28a745; padding-left: 10px; }
+    .section-error { border-left: 4px solid #c0392b; padding-left: 10px; background: #fff6f6; }
+    .section-error h4 { color: #a1271c; }
+    .details-content pre { background:#fff; border:1px solid var(--border-color); padding:6px 8px; overflow:auto; border-radius:4px; max-height:300px; white-space:pre-wrap; word-break:break-word; }
+    .details-content code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 0.85em; }
+    .details-content dl { margin:0.5em 0 0 0; }
+    .details-content dt { font-weight:600; margin-top:0.6em; font-size:0.85em; }
+     .details-content dd { margin:0.2em 0 0.6em 0.8em; font-size:0.85em; }
+      
+     .details-content dl.tech-details { padding-left:1.2em; }
+     .details-content dl.tech-details dt { margin-left:-1.2em; }
+     .details-content dl.tech-details dd { margin:0.2em 0 0.6em 0; }
+     
+    td.details-toggle-cell { min-width:130px; vertical-align: top; text-align:right; }
+    td.details-toggle-cell .details { white-space:nowrap; }
+    td.details-toggle-cell .details-content { margin-top:8px; text-align:left; }
+    .details-icons { display: flex; gap: 8px; margin-top: 8px; align-items: center; justify-content: flex-end; }
+    .icon-btn { cursor: pointer; background: none; border: none; padding: 4px; font-size: 1.1em; opacity: 0.6; transition: opacity 0.2s; }
+    .icon-btn:hover { opacity: 1; }
+    .icon-btn:focus { outline: 2px solid var(--primary-color); border-radius: 2px; }
+    .answer-list { margin: 0; padding-left: 1.5em; }
+        .answer-list li { margin-bottom: 1em; }
+        .answer-list.single { list-style-type: none; padding-left: 0; }
+        .answer-list.single li { margin-bottom: 0; }
+        .details-cell pre { font-family: inherit; margin: 0; line-height: inherit; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; overflow-x: auto; }
+        .filter-container { display: flex; gap: 10px; margin-bottom: 10px; max-width: 800px; align-items: center; }
+        .filter-sort-controls { display: flex; flex-direction: column; gap: 5px; }
+        .filter-sort-controls .header-with-sort { display: flex; align-items: center; gap: 5px; }
+        .filter-sort-controls input, .filter-sort-controls select { width: 100%; box-sizing: border-box; }
+        .sort-btn { cursor: pointer; margin-left: 5px; }
+        .clickable { cursor: pointer; }
+    footer { text-align: center; font-size: 0.85em; color: #777; margin-top: 2em; border-top: 1px solid var(--border-color); padding-top: 1em; }
+    .para { margin:0 0 0.7em 0; }
+    .para:last-child { margin-bottom:0; }
+    .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+    th.details-header { text-align:right; min-width:130px; }
+    
+     
+    .matrix-container { 
+        padding: 20px;  
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: calc(100% - 40px);  
+        max-width: max-content;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+    .matrix-table { 
+        border-collapse: collapse; 
+        border-spacing: 0; 
+        margin: 10px auto; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        width: auto;  
+        max-width: max-content;  
+        table-layout: fixed;  
+    }
+    .matrix-table th, .matrix-table td { border: 1px solid #ddd; text-align: center; vertical-align: middle; box-sizing: border-box; }
+    .matrix-table th { 
+        background-color: var(--primary-color); 
+        color: white; 
+        font-weight: 600; 
+        padding: 4px 2px; 
+        font-size: 0.7em;
+        text-transform: none;
+        line-height: 1.1;
+    }
+    .matrix-table .matrix-header { 
+        writing-mode: vertical-lr; 
+        text-orientation: mixed; 
+        min-width: 30px; 
+        max-width: 40px;  
+    width: 30px;
+    height: calc(var(--matrix-header-size) + var(--matrix-header-fudge));
+    max-height: 200px;  
+        white-space: normal; 
+        overflow: hidden; 
+        overflow-wrap: break-word;
+        word-break: break-word;
+        padding: 4px 1px; 
+        font-size: 0.65em;
+        font-weight: 600;
+        line-height: 1.0;
+        text-transform: none;
+    box-sizing: border-box;  
+    }
+    .matrix-table .matrix-row-header { 
+        background-color: var(--primary-color); 
+        color: white; 
+        font-weight: 600; 
+    padding: 4px 1px; 
+        text-align: center; 
+    width: var(--matrix-header-size);
+    max-width: 200px;  
+        white-space: normal; 
+        overflow: hidden; 
+        font-size: 0.65em;
+        line-height: 1.0;
+        word-break: break-all;
+        text-transform: none;
+    box-sizing: border-box;  
+    }
+    .matrix-cell { 
+    width: var(--matrix-cell-size); 
+    height: var(--matrix-cell-size); 
+        padding: 2px; 
+        position: relative; 
+        cursor: default;
+        transition: background-color 0.2s ease;
+    box-sizing: border-box;
+    }
+    .matrix-cell.diagonal { font-weight: bold; }
+    .matrix-cell-content { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; font-size: 0.8em; }
+    .matrix-percentage { font-weight: bold; margin-bottom: 1px; font-size: 0.9em; }
+    .matrix-details { font-size: 0.7em; opacity: 0.9; }
+    .matrix-legend { 
+        margin: 10px 0; 
+        padding: 8px 12px; 
+        background-color: #f8f9fa; 
+        border-radius: 4px; 
+        font-size: 0.85em;
+        width: 100%;  
+        box-sizing: border-box;  
+    }
+    .matrix-legend h3 { margin: 0 0 8px 0; color: var(--header-color); font-size: 1em; }
+    .matrix-legend-items { 
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 15px; 
+        margin-bottom: 5px; 
+        justify-content: flex-start;  
+    }
+    .matrix-legend-item { display: flex; align-items: center; }
+    .matrix-legend-color { display: inline-block; width: 16px; height: 12px; margin-right: 5px; border: 1px solid #ccc; }
+    .matrix-legend p { margin: 5px 0 0 0; font-size: 0.8em; color: #666; }
+     
+    #summary-table { margin-bottom: 10px; }
+    
+    #compare-selected-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    
+    .matrix-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    }
+    .matrix-modal-content {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        max-width: 500px;
+        max-height: 70vh;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        margin: 20px;
+    }
+    .matrix-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #eee;
+    }
+    .matrix-modal-title {
+        margin: 0;
+        font-size: 1.1em;
+        color: var(--header-color);
+    }
+    .matrix-modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5em;
+        cursor: pointer;
+        color: #666;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+    }
+    .matrix-modal-close:hover {
+        background: #f5f5f5;
+        color: #333;
+    }
+    .matrix-modal-summary {
+        margin: 0 0 16px 0;
+        font-size: 0.95em;
+        color: #666;
+    }
+    .matrix-modal .status-group {
+        margin-bottom: 16px;
+    }
+    .matrix-modal .status-group:last-child {
+        margin-bottom: 0;
+    }
+    .matrix-modal .status-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+        text-transform: capitalize;
+        font-size: 1em;
+    }
+    .matrix-modal .status-title.passed { color: var(--success-text); }
+    .matrix-modal .status-title.failed { color: var(--failure-text); }
+    .matrix-modal .status-title.error { color: var(--error-text); }
+    .matrix-modal .task-list {
+        background: #f8f9fa;
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin: 0;
+        font-size: 0.9em;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .matrix-modal .task-item {
+        margin-bottom: 4px;
+        padding: 2px 0;
+        word-break: break-word;
+        user-select: text;
+        cursor: text;
+    }
+    .matrix-modal .task-item:last-child {
+        margin-bottom: 0;
+    }
+    .empty-task-message {
+        color: #666;
+        font-style: italic;
+    }
+    .selected-count {
+        margin-left: 10px;
+        font-size: 0.9em;
+        color: #666;
+    }
+    </style>
+    <script>
+        function toggleDetails(id, btn) {
+            const element = document.getElementById(id);
+            const show = (element.style.display === "none" || element.style.display === "");
+            element.style.display = show ? "block" : "none";
+            if (btn) {
+                btn.setAttribute('aria-expanded', show ? 'true' : 'false');
+                btn.textContent = show ? 'Hide Details' : 'Show Details';
+            }
+        }
+
+        function copyTraceID(traceID, btn) {
+            navigator.clipboard.writeText(traceID).then(() => {
+                const originalTitle = btn.title;
+                btn.title = 'Copied!';
+                setTimeout(() => { btn.title = originalTitle; }, 2000);
+            }).catch(() => {
+                btn.title = 'Failed to copy';
+            });
+        }
+
+        function updateVisibleCount(table) {
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            const visible = rows.filter(r => r.style.display !== 'none').length;
+            const counter = document.getElementById('visible-count');
+            if (counter) counter.textContent = visible;
+        }
+
+        function filterAndSortTable() {
+            const table = document.getElementById('results-table');
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            const filters = {
+                provider: document.getElementById('provider-filter').value.toLowerCase(),
+                run: document.getElementById('run-filter').value.toLowerCase(),
+                task: document.getElementById('task-filter').value,
+                status: document.getElementById('status-filter').value.toLowerCase(),
+                search: document.getElementById('search-filter').value
+            };
+            let taskRegex = null, searchRegex = null;
+            if (filters.task) {
+                try { taskRegex = new RegExp(filters.task, 'i'); } catch (e) { taskRegex = null; }
+            }
+            if (filters.search) {
+                try { searchRegex = new RegExp(filters.search, 'i'); } catch (e) { searchRegex = null; }
+            }
+            rows.forEach(row => {
+                const provider = row.dataset.provider.toLowerCase();
+                const run = row.dataset.run.toLowerCase();
+                const task = row.dataset.task;
+                const status = row.dataset.status.toLowerCase();
+
+                const searchMatch = searchRegex ? (searchRegex.test(provider) || searchRegex.test(run) || searchRegex.test(task)) : (!filters.search || provider.includes(filters.search.toLowerCase()) || run.includes(filters.search.toLowerCase()) || task.toLowerCase().includes(filters.search.toLowerCase()));
+
+                const show = (filters.provider === '' || provider === filters.provider) &&
+                             (filters.run === '' || run === filters.run) &&
+                             (!taskRegex || taskRegex.test(task)) &&
+                             (filters.status === '' || status === filters.status) &&
+                             (filters.search === '' || searchMatch);
+                
+                row.style.display = show ? '' : 'none';
+            });
+            updateVisibleCount(table);
+        }
+
+        function sortTable(tableId, column, direction) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                let valA, valB;
+                if (column.startsWith('duration') || column.startsWith('passed') || column.startsWith('failed') || column.startsWith('error') || column.startsWith('skipped') || column.startsWith('passrate') || column.startsWith('accuracy') || column.startsWith('errorrate')) {
+                    valA = parseFloat(a.dataset[column]);
+                    valB = parseFloat(b.dataset[column]);
+                } else {
+                    valA = a.dataset[column].toLowerCase();
+                    valB = b.dataset[column].toLowerCase();
+                }
+
+                if (valA < valB) return direction === 'asc' ? -1 : 1;
+                if (valA > valB) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function setupSortButtons() {
+            document.querySelectorAll('.sort-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const tableId = button.closest('table').id;
+                    const column = button.dataset.column;
+                    const direction = button.dataset.direction || 'asc';
+                    
+                    document.querySelectorAll(`#${tableId} .sort-btn`).forEach(btn => {
+                        if (btn !== button) {
+                            btn.innerHTML = '↕️';
+                            delete btn.dataset.direction;
+                        }
+                    });
+
+                    sortTable(tableId, column, direction);
+                    button.innerHTML = direction === 'asc' ? '🔼' : '🔽';
+                    button.dataset.direction = direction === 'asc' ? 'desc' : 'asc';
+                });
+            });
+        }
+        
+        function setupClickableFilters() {
+            document.querySelectorAll('.clickable-filter').forEach(element => {
+                element.addEventListener('click', () => {
+                    const filterType = element.dataset.filterType;
+                    const filterValue = element.dataset.filterValue;
+                    document.getElementById(`${filterType}-filter`).value = filterValue;
+                    filterAndSortTable();
+                });
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('provider-filter').value = '';
+            document.getElementById('run-filter').value = '';
+            document.getElementById('task-filter').value = '';
+            document.getElementById('status-filter').value = '';
+            document.getElementById('search-filter').value = '';
+            filterAndSortTable();
+        }
+
+        function updateCompareButton() {
+            const checkboxes = document.querySelectorAll('.run-compare-checkbox:checked');
+            const button = document.getElementById('compare-selected-btn');
+            const counter = document.getElementById('selected-count');
+            
+            button.disabled = checkboxes.length < 2;
+            counter.textContent = checkboxes.length > 0 ? `${checkboxes.length} selected` : '';
+        }
+
+        function compareSelectedRuns() {
+            const checkboxes = document.querySelectorAll('.run-compare-checkbox:checked');
+            if (checkboxes.length < 2) return;
+
+            const selectedRuns = Array.from(checkboxes).map(cb => ({
+                provider: cb.dataset.provider,
+                run: cb.dataset.run,
+                key: `${cb.dataset.provider}-${cb.dataset.run}`
+            }));
+
+            const matrix = generateComparisonMatrix(selectedRuns);
+            openMatrixWindow(matrix, selectedRuns);
+        }
+
+    function generateComparisonMatrix(runs) {
+            const matrix = {};
+            const results = getResultsData();
+
+            for (let i = 0; i < runs.length; i++) {
+                for (let j = 0; j < runs.length; j++) {
+                    const runA = runs[i];
+                    const runB = runs[j];
+                    const key = `${runA.key}-${runB.key}`;
+                    
+                    if (i === j) {
+                        
+                        const data = results[runA.key] || {};
+                        const tasks = Object.keys(data).filter(task => data[task] !== 'skipped');
+                        const tasksByStatus = {};
+                        tasks.forEach(task => {
+                            const status = data[task];
+                            if (!tasksByStatus[status]) tasksByStatus[status] = [];
+                            tasksByStatus[status].push(task);
+                        });
+                        matrix[key] = {
+                            agree: {
+                                percentage: 100,
+                                identical: true,
+                                tasksByStatus,
+                                total: tasks.length,
+                                common: tasks.length
+                            },
+                            disagree: {
+                                percentage: 0,
+                                identical: false,
+                                tasksByStatus: {},
+                                total: tasks.length,
+                                common: 0
+                            }
+                        };
+                    } else {
+                        matrix[key] = calculateAgreementDisagreement(runA, runB, results);
+                    }
+                }
+            }
+
+            return matrix;
+        }
+
+        function getResultsData() {
+            const results = {};
+            const rows = document.querySelectorAll('#results-table tbody tr');
+            
+            rows.forEach(row => {
+                const provider = row.dataset.provider;
+                const run = row.dataset.run;
+                const task = row.dataset.task;
+                const status = row.dataset.status;
+                
+                const key = `${provider}-${run}`;
+                if (!results[key]) results[key] = {};
+                results[key][task] = status;
+            });
+            
+            return results;
+        }
+
+        
+
+        function calculateAgreementDisagreement(runA, runB, results) {
+            const dataA = results[runA.key] || {};
+            const dataB = results[runB.key] || {};
+
+            const commonTasks = Object.keys(dataA).filter(task => task in dataB);
+            const nonSkippedTasks = commonTasks.filter(task => 
+                dataA[task] !== 'skipped' && dataB[task] !== 'skipped'
+            );
+
+            if (nonSkippedTasks.length === 0) {
+                return {
+                    agree: { percentage: 0, total: 0, common: 0, tasksByStatus: {} },
+                    disagree: { percentage: 0, total: 0, common: 0, tasksByStatus: {} }
+                };
+            }
+
+            const agreeByStatus = {};
+            const disagreeList = [];
+            let agreeCount = 0;
+
+            nonSkippedTasks.forEach(task => {
+                const a = dataA[task];
+                const b = dataB[task];
+                if (a === b) {
+                    if (!agreeByStatus[a]) agreeByStatus[a] = [];
+                    agreeByStatus[a].push(task);
+                    agreeCount += 1;
+                } else {
+                    disagreeList.push(task);
+                }
+            });
+
+            const total = nonSkippedTasks.length;
+            const agreePct = Math.round((agreeCount / total) * 100);
+            const disagreeCount = total - agreeCount;
+            const disagreePct = 100 - agreePct;
+
+            return {
+                agree: { percentage: agreePct, total, common: agreeCount, tasksByStatus: agreeByStatus },
+                disagree: { percentage: disagreePct, total, common: disagreeCount, tasksByStatus: { tasks: disagreeList } }
+            };
+        }
+
+        function generateMatrixColor(overlap) {
+            if (overlap.percentage === 0) return 'transparent';
+            
+            const saturation = overlap.percentage / 100;
+            const total = overlap.common;
+            
+            if (total === 0) return 'transparent';
+            
+            const passed = overlap.tasksByStatus.passed ? overlap.tasksByStatus.passed.length : 0;
+            const failed = overlap.tasksByStatus.failed ? overlap.tasksByStatus.failed.length : 0;
+            const error = overlap.tasksByStatus.error ? overlap.tasksByStatus.error.length : 0;
+            
+            const passedRatio = passed / total;
+            const failedRatio = failed / total;
+            const errorRatio = error / total;
+            
+            const r = Math.round(155 * passedRatio + 255 * failedRatio + 255 * errorRatio);
+            const g = Math.round(255 * passedRatio + 255 * failedRatio + 100 * errorRatio);
+            const b = Math.round(155 * passedRatio + 100 * failedRatio + 100 * errorRatio);
+            
+            return `rgba(${r}, ${g}, ${b}, ${saturation})`;
+        }
+
+        function generateDisagreementColor(dis) {
+            if (dis.percentage === 0) return 'transparent';
+            const saturation = dis.percentage / 100;
+            
+            const r = 176, g = 186, b = 196;
+            return `rgba(${r}, ${g}, ${b}, ${saturation})`;
+        }
+
+        function openMatrixWindow(matrix, runs) {
+            const html = generateMatrixHTML(matrix, runs);
+            
+            const cellWidth = 60;      
+            const headerWidth = 120;   
+            const padding = 80;
+            const titleHeight = 60;    
+            const legendHeight = 120;  
+            const headerRowHeight = 120; 
+            const containerPadding = 30; 
+            const tableMargins = 40;   
+            const extraBuffer = 60;    
+            const minWidth = 600; 
+            const minHeight = 500;     
+            
+            
+            const tableWidth = headerWidth + (runs.length * cellWidth) + padding + 50;
+            const legendMinWidth = 450; 
+            const calculatedWidth = Math.max(tableWidth, legendMinWidth);
+            const matrixRowsHeight = Math.max(runs.length * 60, 180); 
+            const tableHeight = titleHeight + legendHeight + headerRowHeight + containerPadding + 
+                              tableMargins + matrixRowsHeight + extraBuffer;
+            
+            const width = Math.max(minWidth, Math.min(1400, calculatedWidth));
+            const height = Math.max(minHeight, Math.min(1000, tableHeight));
+            
+            const newWindow = window.open('', '_blank', `width=${width},height=${height},scrollbars=yes,resizable=yes`);
+            newWindow.document.write(html);
+            newWindow.document.close();
+        }
+
+        function generateMatrixHTML(matrix, runs) {
+            
+            function escapeHtml(s) {
+                return String(s).replace(/[&<>"']/g, c => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                })[c] || c);
+            }
+            let html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Run Comparison Matrix</title>
+    <style>
+        ${document.querySelector('style').textContent}
+    </style>
+    \x3Cscript>
+        function setupMatrixHover() {
+            const table = document.querySelector('.matrix-table');
+            const cells = table.querySelectorAll('.matrix-cell');
+            
+            cells.forEach((cell, index) => {
+                const row = Math.floor(index / ${runs.length});
+                const col = index % ${runs.length};
+                
+                cell.addEventListener('mouseenter', () => {
+                    // Highlight row
+                    const rowCells = table.querySelectorAll(\`tbody tr:nth-child(\${row + 1}) .matrix-cell\`);
+                    rowCells.forEach(c => c.classList.add('row-highlight'));
+                    
+                    // Highlight column
+                    const colCells = table.querySelectorAll(\`tbody tr .matrix-cell:nth-child(\${col + 2})\`);
+                    colCells.forEach(c => c.classList.add('col-highlight'));
+                });
+                
+                cell.addEventListener('mouseleave', () => {
+                    // Remove all highlights
+                    cells.forEach(c => {
+                        c.classList.remove('row-highlight', 'col-highlight');
+                    });
+                });
+            });
+        }
+        
+        function setupMatrixModal() {
+            // Create modal element
+            const modal = document.createElement('div');
+            modal.className = 'matrix-modal';
+            modal.innerHTML = \`
+                <div class="matrix-modal-content">
+                    <div class="matrix-modal-header">
+                        <h3 class="matrix-modal-title"></h3>
+                        <button class="matrix-modal-close" title="Close">&times;</button>
+                    </div>
+                    <p class="matrix-modal-summary"></p>
+                    <div class="matrix-modal-body"></div>
+                </div>
+            \`;
+            document.body.appendChild(modal);
+            
+            const modalContent = modal.querySelector('.matrix-modal-content');
+            const title = modal.querySelector('.matrix-modal-title');
+            const summary = modal.querySelector('.matrix-modal-summary');
+            const body = modal.querySelector('.matrix-modal-body');
+            const closeBtn = modal.querySelector('.matrix-modal-close');
+            
+            // Close modal handlers
+            const closeModal = () => {
+                modal.style.display = 'none';
+            };
+            
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    closeModal();
+                }
+            });
+            
+            // Add click handlers to matrix cells
+            document.querySelectorAll('.matrix-cell[data-modal]').forEach(cell => {
+                cell.style.cursor = 'pointer';
+                cell.addEventListener('click', (e) => {
+                    const data = JSON.parse(e.currentTarget.getAttribute('data-modal'));
+                    
+                    title.textContent = data.title;
+                    summary.textContent = data.summary;
+                    
+                    body.innerHTML = generateModalContent(data.tasksByStatus);
+                    
+                    modal.style.display = 'flex';
+                });
+            });
+        }
+        
+        function generateModalContent(tasksByStatus) {
+            if (Object.keys(tasksByStatus).length === 0) {
+                return '<p class="empty-task-message">No tasks to display</p>';
+            }
+            
+            let content = '';
+            const keys = Object.keys(tasksByStatus);
+            const defaultOrder = ['passed', 'failed', 'error'];
+            const isDefault = keys.every(k => defaultOrder.includes(k));
+            const order = keys.length === 1 && keys[0] === 'tasks'
+                ? ['tasks']
+                : (isDefault ? defaultOrder.filter(k => keys.includes(k)) : keys.sort());
+            
+            order.forEach(status => {
+                const items = tasksByStatus[status];
+                if (items && items.length > 0) {
+                    const title = status === 'tasks' ? 'Tasks' : (status.charAt(0).toUpperCase() + status.slice(1));
+                    content += \`
+                        <div class="status-group">
+                            <div class="status-title \${status}">\${title} (\${items.length}):</div>
+                            <div class="task-list">\`;
+                    items.forEach(task => {
+                        content += \`<div class="task-item">\${task}</div>\`;
+                    });
+                    content += \`</div></div>\`;
+                }
+            });
+            
+            return content;
+        }
+        
+        function equalizeMatrixHeaderSizes() {
+            const rowHeaders = Array.from(document.querySelectorAll('.matrix-row-header'));
+            if (rowHeaders.length === 0) return;
+            
+            // Calculate target width but apply reasonable limits
+            const currentWidths = rowHeaders.map(h => h.getBoundingClientRect().width);
+            const maxCurrentWidth = Math.max(...currentWidths);
+            
+            // Limit growth: don't exceed 200px or grow more than 50% beyond original
+            const originalWidth = 120; // var(--matrix-header-size)
+            const maxAllowedWidth = Math.min(200, originalWidth * 1.5);
+            const targetWidth = Math.min(maxCurrentWidth, maxAllowedWidth);
+            
+            // Only adjust column header height if it makes sense (avoid excessive growth)
+            const targetHeight = Math.min(targetWidth + 4, 200); // +4 for fudge, max 200px
+            
+            document.querySelectorAll('.matrix-header').forEach(h => {
+                h.style.height = targetHeight + 'px';
+                // Don't change width - keep column headers narrow
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setupMatrixHover();
+            setupMatrixModal();
+            equalizeMatrixHeaderSizes();
+        });
+        window.addEventListener('resize', equalizeMatrixHeaderSizes);
+    \x3C/script>
+    <style>
+        .matrix-cell.row-highlight {
+            box-shadow: inset 0 0 0 2px rgba(74, 144, 226, 0.4) !important;
+        }
+        .matrix-cell.col-highlight {
+            box-shadow: inset 0 0 0 2px rgba(74, 144, 226, 0.4) !important;
+        }
+        .matrix-cell.row-highlight.col-highlight {
+            box-shadow: inset 0 0 0 3px rgba(74, 144, 226, 0.6) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-container">
+        <h1>Run Comparison Matrix</h1>
+        <div class="matrix-legend">
+            <h3>Legend</h3>
+            <div class="matrix-legend-items">
+                <div class="matrix-legend-item">
+                    <span class="matrix-legend-color" style="background-color: rgba(155, 255, 155, 0.8);"></span>
+                    <span>Passed</span>
+                </div>
+                <div class="matrix-legend-item">
+                    <span class="matrix-legend-color" style="background-color: rgba(255, 255, 100, 0.8);"></span>
+                    <span>Failed</span>
+                </div>
+                <div class="matrix-legend-item">
+                    <span class="matrix-legend-color" style="background-color: rgba(255, 100, 100, 0.8);"></span>
+                    <span>Error</span>
+                </div>
+            </div>
+            <div class="matrix-legend-items">
+                <div class="matrix-legend-item">
+                    <span class="matrix-legend-color" style="background-color: rgba(176, 186, 196, 0.8);"></span>
+                    <span>Disagreement</span>
+                </div>
+            </div>
+            <p>Color saturation = overlap %, Color hue = distribution of overlapping results</p>
+            <p>Disagreement saturation = disagreement %</p>
+            <p>The matrix is symmetrical. Lower triangle shows overlap; upper triangle shows disagreement. Diagonal shows per-run distribution.</p>
+        </div>
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th></th>`;
+            
+            runs.forEach(run => {
+                html += `<th class="matrix-header" title="${escapeHtml(run.provider)} - ${escapeHtml(run.run)}">${escapeHtml(run.run)}</th>`;
+            });
+            
+            html += `</tr></thead><tbody>`;
+            
+            runs.forEach((runA, i) => {
+                html += `<tr><th class="matrix-row-header" title="${escapeHtml(runA.provider)} - ${escapeHtml(runA.run)}">${escapeHtml(runA.run)}</th>`;
+                
+                runs.forEach((runB, j) => {
+                    const key = `${runA.key}-${runB.key}`;
+                    if (i === j) {
+                        const diag = matrix[key].agree;
+                        const p = diag.tasksByStatus.passed ? diag.tasksByStatus.passed.length : 0;
+                        const f = diag.tasksByStatus.failed ? diag.tasksByStatus.failed.length : 0;
+                        const e = diag.tasksByStatus.error ? diag.tasksByStatus.error.length : 0;
+                        const tooltipText = `Run distribution: Passed ${p}, Failed ${f}, Error ${e}`;
+                        const modalData = { title: `${escapeHtml(runA.run)}`, summary: `${diag.total} tasks total`, tasksByStatus: diag.tasksByStatus };
+                        const color = generateMatrixColor(diag);
+                        html += `<td class="matrix-cell diagonal" style="background-color: ${color};" title="${tooltipText}" data-modal='${JSON.stringify(modalData).replace(/'/g, "&#39;")}'>
+                            <div class="matrix-cell-content">
+                                <div class="matrix-percentage">${diag.percentage}%</div>
+                                <div class="matrix-details">${diag.total} tasks</div>
+                            </div>
+                        </td>`;
+                        return;
+                    }
+                    if (j < i) {
+                        const overlap = matrix[key].agree;
+                        const color = generateMatrixColor(overlap);
+                        const p = overlap.tasksByStatus.passed ? overlap.tasksByStatus.passed.length : 0;
+                        const f = overlap.tasksByStatus.failed ? overlap.tasksByStatus.failed.length : 0;
+                        const e = overlap.tasksByStatus.error ? overlap.tasksByStatus.error.length : 0;
+                        let tooltipText, modalData;
+                        if (!overlap.total) {
+                            tooltipText = 'No comparable tasks (all skipped or none in common)';
+                            modalData = { title: `${escapeHtml(runA.run)} = ${escapeHtml(runB.run)}`, summary: 'All tasks were skipped or none in common', tasksByStatus: {} };
+                        } else {
+                            tooltipText = `Overlap: ${overlap.percentage}% (${overlap.common}/${overlap.total}) | Passed ${p}, Failed ${f}, Error ${e}`;
+                            modalData = { title: `${escapeHtml(runA.run)} = ${escapeHtml(runB.run)}`, summary: `${overlap.percentage}% overlap (${overlap.common}/${overlap.total} tasks)`, tasksByStatus: overlap.tasksByStatus };
+                        }
+                        html += `<td class="matrix-cell" style="background-color: ${color};" title="${tooltipText}" data-modal='${JSON.stringify(modalData).replace(/'/g, "&#39;")}'>
+                            <div class="matrix-cell-content">
+                                <div class="matrix-percentage">${overlap.percentage}%</div>
+                                <div class="matrix-details">${overlap.common}/${overlap.total}</div>
+                            </div>
+                        </td>`;
+                        return;
+                    }
+                    const dis = matrix[key].disagree;
+                    const color = generateDisagreementColor(dis);
+                    let tooltipText, modalData;
+                    if (!dis.total) {
+                        tooltipText = 'No comparable tasks (all skipped or none in common)';
+                        modalData = { title: `${escapeHtml(runA.run)} ≠ ${escapeHtml(runB.run)}`, summary: 'All tasks were skipped or none in common', tasksByStatus: {} };
+                    } else {
+                        tooltipText = `Disagreement: ${dis.percentage}% (${dis.common}/${dis.total})`;
+                        modalData = { title: `${escapeHtml(runA.run)} ≠ ${escapeHtml(runB.run)}`, summary: `${dis.percentage}% disagreement (${dis.common}/${dis.total} tasks)`, tasksByStatus: dis.tasksByStatus };
+                    }
+                    html += `<td class="matrix-cell" style="background-color: ${color};" title="${tooltipText}" data-modal='${JSON.stringify(modalData).replace(/'/g, "&#39;")}'>
+                        <div class="matrix-cell-content">
+                            <div class="matrix-percentage">${dis.percentage}%</div>
+                            <div class="matrix-details">${dis.common}/${dis.total}</div>
+                        </div>
+                    </td>`;
+                });
+                
+                html += '</tr>';
+            });
+            
+            html += `</tbody></table></div></body></html>`;
+            return html;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.filter-sort-controls input, .filter-sort-controls select, #search-filter').forEach(input => {
+                input.addEventListener('input', filterAndSortTable);
+            });
+             document.querySelectorAll('.filter-sort-controls select').forEach(select => {
+                select.addEventListener('change', filterAndSortTable);
+            });
+            setupSortButtons();
+            setupClickableFilters();
+            
+            
+            document.querySelectorAll('.run-compare-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', updateCompareButton);
+            });
+            
+            
+            const selectAllCheckbox = document.getElementById('select-all-runs');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const runCheckboxes = document.querySelectorAll('.run-compare-checkbox');
+                    runCheckboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                    updateCompareButton();
+                });
+                
+                
+                document.querySelectorAll('.run-compare-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const runCheckboxes = document.querySelectorAll('.run-compare-checkbox');
+                        const checkedBoxes = document.querySelectorAll('.run-compare-checkbox:checked');
+                        selectAllCheckbox.checked = runCheckboxes.length === checkedBoxes.length;
+                        selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < runCheckboxes.length;
+                    });
+                });
+            }
+            updateCompareButton();
+            
+            
+            filterAndSortTable();
+        });
+    </script>
+</head>
+<body itemscope itemtype="https://schema.org/WebPage">
+    <header>
+        <h1 itemprop="headline">MindTrial Run Results</h1>
+    </header>
+    <main itemprop="mainContentOfPage">
+        <section aria-labelledby="runsummary" itemscope itemtype="https://schema.org/Table" itemprop="hasPart">
+            <h2 id="runsummary" itemprop="headline">Summary</h2>
+            <meta itemprop="alternativeHeadline" content="AI Model Evaluation Run Summary">
+            <meta itemprop="description" content="Summary of passed, failed, error, and skipped counts, along with pass rate, accuracy, error rate, and total duration for each AI provider and run configuration. Pass Rate = Passed/(Passed+Failed+Error). Accuracy = Passed/(Passed+Failed). Error Rate = Error/(Passed+Failed+Error). Skipped tasks are excluded from rate calculations. Rates default to 0 when the denominator is 0.">
+            <table id="summary-table">
+                <caption class="visually-hidden">Run result summary by provider and run.</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 30px; padding: 8px 4px; text-align: center; vertical-align: middle;">
+                            <input type="checkbox" id="select-all-runs" title="Select/Deselect All Runs" style="margin: 0; vertical-align: middle;">
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Provider</span>
+                                <span class="sort-btn" data-column="provider" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Run</span>
+                                <span class="sort-btn" data-column="run" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Passed</span>
+                                <span class="sort-btn" data-column="passed" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Failed</span>
+                                <span class="sort-btn" data-column="failed" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Error</span>
+                                <span class="sort-btn" data-column="error" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Skipped</span>
+                                <span class="sort-btn" data-column="skipped" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Pass Rate (%)</span>
+                                <span class="sort-btn" data-column="passrate" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Accuracy (%)</span>
+                                <span class="sort-btn" data-column="accuracy" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Error Rate (%)</span>
+                                <span class="sort-btn" data-column="errorrate" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Total Duration</span>
+                                <span class="sort-btn" data-column="duration" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Input Tokens</span>
+                                <span class="sort-btn" data-column="inputtokens" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Output Tokens</span>
+                                <span class="sort-btn" data-column="outputtokens" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="header-with-sort">
+                                <span>Est. Cost</span>
+                                <span class="sort-btn" data-column="cost" data-direction="asc">↕️</span>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr itemscope itemtype="https://schema.org/Observation" data-provider="anthropic" data-run="Claude Opus 5.5 (high thinking)" data-passed="8" data-failed="0" data-error="0" data-skipped="0" data-passrate="100.00" data-accuracy="100.00" data-errorrate="0.00" data-duration="58812" data-inputtokens="15218" data-outputtokens="3801" data-cost="0.136892">
+                        <td>
+                            <input type="checkbox" class="run-compare-checkbox" data-provider="anthropic" data-run="Claude Opus 5.5 (high thinking)" title="Select for comparison">
+                        </td>
+                        <td itemprop="observationAbout" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic">
+                            <span itemprop="name">anthropic</span>
+                        </td>
+                        <td itemprop="identifier" class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5.5 (high thinking)" title="Filter by run: Claude Opus 5.5 (high thinking)">Claude Opus 5.5 (high thinking)</td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Passed"><span itemprop="value">8</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Failed"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Error"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Skipped"><span itemprop="value">0</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Pass Rate (%)"><meta itemprop="unitText" content="%"><span itemprop="value">100.00</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Accuracy (%)"><meta itemprop="unitText" content="%"><span itemprop="value">100.00</span></td>
+                        <td itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty"><meta itemprop="name" content="Error Rate (%)"><meta itemprop="unitText" content="%"><span itemprop="value">0.00</span></td>
+                        <td><time itemprop="observationPeriod" datetime="PT58.813S">58.813s</time>
+                        </td>
+                        <td>15218</td>
+                        <td>3801</td>
+                        <td>$0.14</td>
+                    </tr></tbody>
+            </table>
+            <div style="margin-top: 0;">
+                <button id="compare-selected-btn" onclick="compareSelectedRuns()" disabled>Compare Selected Runs</button>
+                <span id="selected-count" class="selected-count"></span>
+            </div>
+        </section>
+        <section aria-labelledby="detailedresults" itemscope itemtype="https://schema.org/Table" itemprop="hasPart">
+            <h2 id="detailedresults" itemprop="headline">Task Results</h2>
+            <meta itemprop="alternativeHeadline" content="AI Model Evaluation Task Results">
+            <meta itemprop="description" content="Detailed results for each task, including provider, run configuration, task name, status, duration, answer, and details.">
+            <div class="filter-container">
+                <input id="search-filter" type="text" placeholder="Search (regexp)..." title="Supports regular expressions, e.g. hello|world, ^start, end$, ^(?!visual\s*-\s*).*" class="filter-sort-controls">
+                <button onclick="clearFilters()">Clear Filters</button>
+                <div><span id="visible-count" aria-live="polite"></span> visible</div>
+            </div>
+            <table id="results-table">
+                <caption class="visually-hidden">Detailed task evaluation results.</caption>
+                <thead>
+                    <tr>
+                        <th>
+                            <div class="filter-sort-controls">
+                                <div class="header-with-sort">
+                                    <span>Provider</span>
+                                    <span class="sort-btn" data-column="provider" data-direction="asc">↕️</span>
+                                </div>
+                                <select id="provider-filter">
+                                    <option value="">All</option>
+                                    <option value="anthropic">anthropic</option>
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="filter-sort-controls">
+                                <div class="header-with-sort">
+                                    <span>Run</span>
+                                    <span class="sort-btn" data-column="run" data-direction="asc">↕️</span>
+                                </div>
+                                <select id="run-filter">
+                                    <option value="">All</option>
+                                    <option value="Claude Opus 5.5 (high thinking)">Claude Opus 5.5 (high thinking)</option>
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="filter-sort-controls">
+                                <div class="header-with-sort">
+                                    <span>Task</span>
+                                    <span class="sort-btn" data-column="task" data-direction="asc">↕️</span>
+                                </div>
+                                <input id="task-filter" type="text" placeholder="Filter (regexp)..." title="Supports regular expressions, e.g. task-(one|two), ^task, ^(?!visual\s*-\s*).*">
+                            </div>
+                        </th>
+                        <th>
+                            <div class="filter-sort-controls">
+                                <div class="header-with-sort">
+                                    <span>Status</span>
+                                    <span class="sort-btn" data-column="status" data-direction="asc">↕️</span>
+                                </div>
+                                <select id="status-filter">
+                                    <option value="">All</option>
+                                    <option value="passed">Passed</option>
+                                    <option value="failed">Failed</option>
+                                    <option value="error">Error</option>
+                                    <option value="skipped">Skipped</option>
+                                </select>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="filter-sort-controls">
+                                <div class="header-with-sort">
+                                    <span>Duration</span>
+                                    <span class="sort-btn" data-column="duration" data-direction="asc">↕️</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th>Answer</th>
+                        <th class="details-header">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5.5 (high thinking)" data-task="test/koan03/triage - wait for db connection refused" data-status="passed" data-duration="7862">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5.5 (high thinking)" title="Filter by run: Claude Opus 5.5 (high thinking)"><span itemprop="identifier">Claude Opus 5.5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="test/koan03/triage - wait for db connection refused" title="Filter by task: test/koan03/triage - wait for db connection refused"><span itemprop="name">test/koan03/triage - wait for db connection refused</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT7.862S">7.862s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_postgres_service_image",
+  "root_cause": "no_postgres_service_container"
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused">
+                                        <h4 itemprop="name">Missing PostgreSQL service container in CircleCI job</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The config&#39;s docker executor lists only one image (circleci/node). In CircleCI 2.0, extra images under `docker:` act as service containers that share the primary container&#39;s network, so they are reachable on localhost. No PostgreSQL image is declared, so nothing is listening on port 5432. The job log confirms this: every dial to 127.0.0.1:5432 gets &#39;connection refused&#39; (an immediate rejection, not a slow start) for the full minute until the timeout.</p>
+                                                <p class="para">The other candidate causes do not fit the artifacts. Dockerize was installed successfully and ran, so it is present. The port is the standard PostgreSQL port that the requirement names. The Postgres client is irrelevant, because dockerize makes a raw TCP check.</p>
+                                                <p class="para">For the same reasons, the other fixes do not work. A longer timeout would still fail, since no database exists. Removing the wait step or changing the host would drop or break the required localhost:5432 check. Installing Postgres via apt is not supported by these artifacts. The fix is to add a PostgreSQL service image (e.g., circleci/postgres) as a second image under `docker:`, so the database listens on localhost:5432 and the wait step succeeds.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_postgres_service_image&#34;,
+  &#34;root_cause&#34;: &#34;no_postgres_service_container&#34;
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_postgres_service_image&#34;,
+  &#34;root_cause&#34;: &#34;no_postgres_service_container&#34;
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>2396</dd><dt>Output</dt><dd>468</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan03_triage---wait-for-db-connection-refused" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M3ANQR6RCF8200BGPDT7B86K', this)" title="Copy Trace ID: 01M3ANQR6RCF8200BGPDT7B86K" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5.5 (high thinking)" data-task="build/koan05/triage - ruby missing after checkout" data-status="passed" data-duration="6433">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5.5 (high thinking)" title="Filter by run: Claude Opus 5.5 (high thinking)"><span itemprop="identifier">Claude Opus 5.5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="build/koan05/triage - ruby missing after checkout" title="Filter by task: build/koan05/triage - ruby missing after checkout"><span itemprop="name">build/koan05/triage - ruby missing after checkout</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT6.434S">6.434s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_ruby_orb",
+  "install_attempted": false
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout">
+                                        <h4 itemprop="name">Ruby missing: no install step before ruby -v</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The step list shows only Spin up environment, Preparing environment variables, Checkout code, then `ruby -v`. No step tried to install Ruby. The config confirms this: the orbs section holds only a placeholder comment, and the install-step slot is empty. So `ruby -v` failed with &#39;command not found&#39; (exit 127). The failure took 0s and is a missing binary, so it is not a timeout. Changing the base image is ruled out because the executor must stay `cimg/base:stable`. Installing via apt would not reliably give exactly 2.6.3 (distro packages pin their own versions), and the config&#39;s own placeholders (&#39;# Add Orb here&#39; and the install-step comment) point to the intended fix. That fix is to add the CircleCI Ruby orb (e.g., `ruby: circleci/ruby@&lt;version&gt;`) and use its install command (`ruby/install` with `version: &#39;2.6.3&#39;`) before `ruby -v`.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_ruby_orb&#34;,
+  &#34;install_attempted&#34;: false
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_ruby_orb&#34;,
+  &#34;install_attempted&#34;: false
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1262</dd><dt>Output</dt><dd>368</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan05_triage---ruby-missing-after-checkout" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M3ANQZWG2QRBTAMHG0A6DXVG', this)" title="Copy Trace ID: 01M3ANQZWG2QRBTAMHG0A6DXVG" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5.5 (high thinking)" data-task="build/koan06/triage - yarn offline cache miss" data-status="passed" data-duration="6012">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5.5 (high thinking)" title="Filter by run: Claude Opus 5.5 (high thinking)"><span itemprop="identifier">Claude Opus 5.5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="build/koan06/triage - yarn offline cache miss" title="Filter by task: build/koan06/triage - yarn offline cache miss"><span itemprop="name">build/koan06/triage - yarn offline cache miss</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT6.013S">6.013s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "cache_restored": false,
+  "checksum_target": "package.json",
+  "fix": "enable_restore_and_save_cache"
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss">
+                                        <h4 itemprop="name">Missing Yarn cache steps cause offline install failure</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The restore_cache step is commented out in config.yml, and steps.txt shows no &#39;Restoring cache&#39; step before &#39;Install Dependencies&#39;, so no cache was restored. yarn found nothing in its offline cache and failed. The job.log says &#39;info No lockfile found.&#39;, so yarn.lock does not exist in the repository and cannot be checksummed. The file that declares the project&#39;s dependencies is package.json, which matches the commented step names (&#39;Yarn Package Json Cache&#39;). With --offline kept, both the restore_cache and save_cache steps (for ~/.cache/yarn) are missing and need to be enabled, keyed on a checksum of package.json.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;cache_restored&#34;: false,
+  &#34;checksum_target&#34;: &#34;package.json&#34;,
+  &#34;fix&#34;: &#34;enable_restore_and_save_cache&#34;
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;cache_restored&#34;: false,
+  &#34;checksum_target&#34;: &#34;package.json&#34;,
+  &#34;fix&#34;: &#34;enable_restore_and_save_cache&#34;
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1690</dd><dt>Output</dt><dd>411</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan06_triage---yarn-offline-cache-miss" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M3ANR65MGH8QB5Q8K0YNR3FZ', this)" title="Copy Trace ID: 01M3ANR65MGH8QB5Q8K0YNR3FZ" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan07_triage---junit-written-not-published" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5.5 (high thinking)" data-task="test/koan07/triage - junit written not published" data-status="passed" data-duration="6233">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5.5 (high thinking)" title="Filter by run: Claude Opus 5.5 (high thinking)"><span itemprop="identifier">Claude Opus 5.5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="test/koan07/triage - junit written not published" title="Filter by task: test/koan07/triage - junit written not published"><span itemprop="name">test/koan07/triage - junit written not published</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT6.233S">6.233s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "fix": "add_store_test_results_and_store_artifacts",
+  "job_green": false,
+  "missing_store_artifacts": true,
+  "missing_store_test_results": true,
+  "results_produced": true
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan07_triage---junit-written-not-published', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan07_triage---junit-written-not-published">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan07_triage---junit-written-not-published" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan07_triage---junit-written-not-published">
+                                        <h4 itemprop="name">CircleCI JUnit results not stored or exported</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The &#39;Run tests&#39; step log shows &#39;Wrote ~/project/results/test_results.xml&#39; before the step exits, so the results file was produced (results_produced = true). The step then runs `exit 1`: steps.txt lists &#39;Run tests FAILED&#39; and the log ends with &#39;CircleCI received exit code 1&#39;, so the job did not succeed (job_green = false). The config&#39;s steps are only `checkout` and one `run` step. There is no `store_test_results` step, so nothing feeds the Test Summary tab (missing_store_test_results = true). There is also no `store_artifacts` step, so the file is never exported as an artifact (missing_store_artifacts = true). The requirement covers both reporting surfaces, so the fix is to add both steps pointing at ~/project/results (for example `store_test_results: path: ~/project/results` and `store_artifacts: path: ~/project/results`). Because &#39;Run tests&#39; fails, both steps also need `when: always` so they still run after the failure. Removing `exit 1` alone would only affect the job status and would not report the results; there is no `upload` setting involved.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_store_test_results_and_store_artifacts&#34;,
+  &#34;job_green&#34;: false,
+  &#34;missing_store_artifacts&#34;: true,
+  &#34;missing_store_test_results&#34;: true,
+  &#34;results_produced&#34;: true
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;fix&#34;: &#34;add_store_test_results_and_store_artifacts&#34;,
+  &#34;job_green&#34;: false,
+  &#34;missing_store_artifacts&#34;: true,
+  &#34;missing_store_test_results&#34;: true,
+  &#34;results_produced&#34;: true
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1758</dd><dt>Output</dt><dd>460</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan07_triage---junit-written-not-published" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M3ANRC1JA3ETY3B8299GVJGA', this)" title="Copy Trace ID: 01M3ANRC1JA3ETY3B8299GVJGA" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5.5 (high thinking)" data-task="deploy/koan08/triage - deploy ran off production" data-status="passed" data-duration="6370">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5.5 (high thinking)" title="Filter by run: Claude Opus 5.5 (high thinking)"><span itemprop="identifier">Claude Opus 5.5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="deploy/koan08/triage - deploy ran off production" title="Filter by task: deploy/koan08/triage - deploy ran off production"><span itemprop="name">deploy/koan08/triage - deploy ran off production</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT6.371S">6.371s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "behaviour_correct": false,
+  "fix": "filters_branches_only_production",
+  "fix_target_job": "deploy",
+  "pipeline_green": true
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production">
+                                        <h4 itemprop="name">Deploy ran on non-production branch</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The run shows the workflow build-test-and-deploy finished SUCCESS with all three jobs green, so pipeline_green is true. However, the run was on branch &#39;koans-08-branch-filters&#39;, not &#39;production&#39;, yet the deploy job ran (and executed &#39;echo &#34;Deploy complete&#34;&#39;). The requirement says deploy must run only for commits to production, so the behaviour is incorrect. The config&#39;s deploy workflow entry has only &#39;requires: [test-production]&#39; and no branch filter; requires does not restrict branches. The fix is to add &#39;filters: branches: only: production&#39; to the deploy entry in the workflow. Branch filters belong on the workflow job entry, not the job definition. An &#39;ignore&#39; list of non-production branches would be fragile and would not reliably limit deploy to production. build and test-production need no restriction, and leaving them unfiltered keeps the production workflow green because deploy&#39;s required job test-production still runs there.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;behaviour_correct&#34;: false,
+  &#34;fix&#34;: &#34;filters_branches_only_production&#34;,
+  &#34;fix_target_job&#34;: &#34;deploy&#34;,
+  &#34;pipeline_green&#34;: true
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;behaviour_correct&#34;: false,
+  &#34;fix&#34;: &#34;filters_branches_only_production&#34;,
+  &#34;fix_target_job&#34;: &#34;deploy&#34;,
+  &#34;pipeline_green&#34;: true
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1592</dd><dt>Output</dt><dd>385</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan08_triage---deploy-ran-off-production" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M3ANRJ4D70SAZ3Y4V0W8F88F', this)" title="Copy Trace ID: 01M3ANRJ4D70SAZ3Y4V0W8F88F" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan04_triage---parallelism-without-split" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5.5 (high thinking)" data-task="test/koan04/triage - parallelism without split" data-status="passed" data-duration="7913">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5.5 (high thinking)" title="Filter by run: Claude Opus 5.5 (high thinking)"><span itemprop="identifier">Claude Opus 5.5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="test/koan04/triage - parallelism without split" title="Filter by task: test/koan04/triage - parallelism without split"><span itemprop="name">test/koan04/triage - parallelism without split</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT7.914S">7.914s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "each_node_ran_full_suite": true,
+  "fix": "use_circleci_tests_split",
+  "suite_split": false
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan04_triage---parallelism-without-split', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan04_triage---parallelism-without-split">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan04_triage---parallelism-without-split" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan04_triage---parallelism-without-split">
+                                        <h4 itemprop="name">Parallel nodes ignore test split output</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">The config sets parallelism: 2, and the log confirms CIRCLE_NODE_TOTAL=2. The `circleci tests split` call worked: node 0 was given src/test_goodbye.sh and node 1 was given src/test_hello.sh. The problem is that its output (/tmp/split.txt) is never used. The loop iterates `for f in src/test_*.sh`, so each node ran both test_goodbye.sh and test_hello.sh. That gives RAN=2 against EXPECTED=1 on each node, which trips the guard and exits with code 1. So the suite was not actually split: every node ran every file and both nodes failed. The fix is to loop over the output of `circleci tests glob ... | circleci tests split` (the contents of /tmp/split.txt) instead of the raw shell glob. Each node then runs only its assigned file, together they cover the suite exactly once, and the RAN == EXPECTED check passes. The workflow stays unchanged. Raising parallelism, dropping parallelism, or splitting into separate workflow jobs would either leave the bug in place or break the requirements.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;each_node_ran_full_suite&#34;: true,
+  &#34;fix&#34;: &#34;use_circleci_tests_split&#34;,
+  &#34;suite_split&#34;: false
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;each_node_ran_full_suite&#34;: true,
+  &#34;fix&#34;: &#34;use_circleci_tests_split&#34;,
+  &#34;suite_split&#34;: false
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>2507</dd><dt>Output</dt><dd>441</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-test_koan04_triage---parallelism-without-split" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M3ANRRBG9DNKERC6ES0PXFDQ', this)" title="Copy Trace ID: 01M3ANRRBG9DNKERC6ES0PXFDQ" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan09_triage---deploy-ran-without-beta-tag" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5.5 (high thinking)" data-task="deploy/koan09/triage - deploy ran without beta tag" data-status="passed" data-duration="10261">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5.5 (high thinking)" title="Filter by run: Claude Opus 5.5 (high thinking)"><span itemprop="identifier">Claude Opus 5.5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="deploy/koan09/triage - deploy ran without beta tag" title="Filter by task: deploy/koan09/triage - deploy ran without beta tag"><span itemprop="name">deploy/koan09/triage - deploy ran without beta tag</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT10.262S">10.262s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "behaviour_correct": false,
+  "fix": "filters_tags_only_beta",
+  "fix_target_job": "all_jobs",
+  "pipeline_green": true
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan09_triage---deploy-ran-without-beta-tag', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan09_triage---deploy-ran-without-beta-tag">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan09_triage---deploy-ran-without-beta-tag" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan09_triage---deploy-ran-without-beta-tag">
+                                        <h4 itemprop="name">Deploy ran on untagged branch push</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">This run did not behave as required. The workflow ran from a push to the branch `koans-09-tag-filters` via an API trigger, with no tag shown. build, test and deploy all show SUCCESS, so the pipeline was green. But deploy ran on an untagged branch push, which the requirement forbids. The config has no `filters` on any job, so deploy runs on every branch push. CircleCI also does not run jobs for tag pushes unless each job has a matching `filters.tags` entry. So pushing `beta-main-0.1.1` would not currently deploy. Deploy needs a tag filter that accepts only beta tags (e.g. `only: /^beta-.*/`) and `branches: ignore: /.*/`. Because deploy requires test, which requires build, build and test also need a tag filter matching beta tags. Otherwise they would not run on the tag push and deploy would never be reached. Build and test can keep running on branches, since branches run by default. So the change applies to all jobs: add a beta-only tag filter everywhere, plus the branch ignore on deploy.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;behaviour_correct&#34;: false,
+  &#34;fix&#34;: &#34;filters_tags_only_beta&#34;,
+  &#34;fix_target_job&#34;: &#34;all_jobs&#34;,
+  &#34;pipeline_green&#34;: true
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;behaviour_correct&#34;: false,
+  &#34;fix&#34;: &#34;filters_tags_only_beta&#34;,
+  &#34;fix_target_job&#34;: &#34;all_jobs&#34;,
+  &#34;pipeline_green&#34;: true
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>1726</dd><dt>Output</dt><dd>779</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-deploy_koan09_triage---deploy-ran-without-beta-tag" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M3ANS02V906FGM3CTXYC60S6', this)" title="Copy Trace ID: 01M3ANS02V906FGM3CTXYC60S6" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan13_triage---workspace-missing-apps" itemscope itemtype="https://schema.org/Question" data-provider="anthropic" data-run="Claude Opus 5.5 (high thinking)" data-task="build/koan13/triage - workspace missing apps" data-status="passed" data-duration="7724">
+                        <td itemprop="publisher" itemscope itemtype="https://schema.org/Organization" class="clickable-filter clickable" data-filter-type="provider" data-filter-value="anthropic" title="Filter by provider: anthropic"><span itemprop="name">anthropic</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="run" data-filter-value="Claude Opus 5.5 (high thinking)" title="Filter by run: Claude Opus 5.5 (high thinking)"><span itemprop="identifier">Claude Opus 5.5 (high thinking)</span></td>
+                        <td class="clickable-filter clickable" data-filter-type="task" data-filter-value="build/koan13/triage - workspace missing apps" title="Filter by task: build/koan13/triage - workspace missing apps"><span itemprop="name">build/koan13/triage - workspace missing apps</span></td>
+                        <td class="status-passed clickable-filter clickable" data-filter-type="status" data-filter-value="passed" title="Filter by status: Passed">
+                            <span itemscope itemtype="https://schema.org/PropertyValue" itemprop="additionalProperty">
+                                <meta itemprop="name" content="status">
+                                <span itemprop="value">Passed</span>
+                            </span>
+                        </td>
+                        <td><time itemprop="timeRequired" datetime="PT7.725S">7.725s</time>
+                        </td>
+                        <td class="details-cell">
+                            <ol class="answer-list single">
+                                <li><pre>{
+  "builds_green": true,
+  "deploy_green": false,
+  "fix": "persist_app_paths",
+  "workspace_had_apps": false
+}</pre></li>
+                            </ol>
+                        </td>
+                        <td class="details-toggle-cell">
+                            <button class="details" onclick="toggleDetails('details-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan13_triage---workspace-missing-apps', this)" aria-expanded="false" aria-controls="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan13_triage---workspace-missing-apps">Show Details</button>
+                            <div id="details-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan13_triage---workspace-missing-apps" class="details-content">
+                                <section class="section-answer">
+                                    <div itemscope itemtype="https://schema.org/Answer" itemprop="suggestedAnswer" itemref="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan13_triage---workspace-missing-apps">
+                                        <h4 itemprop="name">Apps not persisted to workspace for deploy</h4>
+                                        <details class="explanation" open itemprop="answerExplanation" itemscope itemtype="https://schema.org/Comment">
+                                            <summary>Answer Explanation</summary>
+                                            <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                                <p class="para">Per workflow.txt, build-linux, build-mac and build-windows all show SUCCESS, while deploy shows FAILED, and the workflow is FAILED. In deploy&#39;s &#39;Verify apps present&#39; step (job.log), the find output after attaching the workspace lists only ./meta/linux/build.txt, ./meta/mac/build.txt and ./meta/windows/build.txt. No app/* files are present, so `test -f app/linux/app.linux` returned exit code 1. The cause is in config.yml: each build job&#39;s persist_to_workspace lists only its meta/&lt;platform&gt; directory. The app/&lt;platform&gt; directory that holds the generated app file is never persisted, so the attached workspace cannot contain the apps. The fix is to add app/linux, app/windows and app/mac to the persist_to_workspace paths of the matching build jobs. The alternatives do not meet the requirement. Storing artifacts only on the build jobs means deploy still has no apps, and the requirement is that deploy verifies and uploads them. Fixing only one platform leaves two tests failing. Changing only attach_workspace does nothing, because the files were never persisted. Removing the verify step would make the job pass without the apps actually being available, which does not satisfy the requirement.</p>
+                                            </div>
+                                        </details>
+                                        <details open>
+                                            <summary>Actual Answer</summary>
+                                            <ol style="margin:0.5em 0 0 1.2em; list-style:none; padding:0;">
+                                                <li style="margin:0;">
+                                                    <pre><code itemprop="text">{
+  &#34;builds_green&#34;: true,
+  &#34;deploy_green&#34;: false,
+  &#34;fix&#34;: &#34;persist_app_paths&#34;,
+  &#34;workspace_had_apps&#34;: false
+}
+</code></pre>
+                                                </li>
+                                            </ol>
+                                        </details>
+                                    </div>
+                                    <details>
+                                        <summary>Expected Acceptable Answer(s)</summary>
+                                        <ol class="expected-answers" style="margin:0.5em 0 0 1.2em; padding:0;">
+                                            <li itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><pre><code itemprop="text">{
+  &#34;builds_green&#34;: true,
+  &#34;deploy_green&#34;: false,
+  &#34;fix&#34;: &#34;persist_app_paths&#34;,
+  &#34;workspace_had_apps&#34;: false
+}
+</code></pre></li>
+                                        </ol>
+                                    </details>
+                                        <details>
+                                            <summary>Token Usage</summary>
+                                            <dl class="tech-details" style="margin-top:0.4em;"><dt>Input</dt><dd>2287</dd><dt>Output</dt><dd>489</dd></dl>
+                                        </details>
+                                </section>
+                                <section id="validation-run-anthropic-Claude-Opus-5_5-_high-thinking_-build_koan13_triage---workspace-missing-apps" class="section-validation" itemscope itemtype="https://schema.org/Comment" itemprop="comment">
+                                    <h4>Response Assessment</h4>
+                                    <details class="explanation" open>
+                                        <summary>Validation Explanation</summary>
+                                        <div class="explanation-body" style="margin-top:0.5em;" itemprop="text">
+                                            <p class="para">Response matches one of the accepted answers.</p>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+                            <div class="details-icons">
+                                <button class="icon-btn" onclick="copyTraceID('01M3ANSA3JAMSZ6KHQF7MKNNY3', this)" title="Copy Trace ID: 01M3ANSA3JAMSZ6KHQF7MKNNY3" aria-label="Copy Trace ID">📋</button>
+                            </div>
+                        </td>
+                    </tr></tbody>
+            </table>
+        </section>
+    </main>
+    <footer>
+          Generated by <span itemprop="creator" itemscope itemtype="https://schema.org/SoftwareApplication">
+                <a href="https://github.com/petmal/mindtrial" target="_blank" rel="noopener"
+                    title="Visit MindTrial source repository" itemprop="downloadUrl releaseNotes discussionUrl url"><span itemprop="name">MindTrial</span></a>
+                <span itemprop="softwareVersion">v0.0.0-20260924183800-a2341ad88bde&#43;dirty</span></span> on <span itemprop="dateCreated">Thu, 24 Sep 2026 14:40:22 -0700</span>.
+    </footer>
+</body>
+</html>

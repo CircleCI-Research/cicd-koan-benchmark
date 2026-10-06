@@ -1,0 +1,739 @@
+TraceID,Provider,Run,Model,Task,Status,Duration,InputTokens,OutputTokens,EstCostUSD,Answer,Details
+01M3QKN6Y4QKWTHK8MX92X8N5Q,anthropic,Claude Fable 5.1 (high thinking),claude-fable-5-1,test/koan03/triage - wait for db connection refused,Passed,8.133s,2396,384,0.043160,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing Postgres Service Container in CircleCI Job"",
+    ""Explanation"": [
+      ""The config declares only one Docker image (circleci/node) in the job's `docker:` list; no PostgreSQL service container is defined, so nothing is listening on localhost:5432. The log confirms this: every dial attempt returns 'connection refused' (not a timeout or slow start) for the full minute, meaning no process is bound to the port at all. dockerize itself installed and ran successfully (the 'install dockerize' step succeeded and the tool produced output), so it is not missing. The port 5432 is correct for PostgreSQL, and increasing the timeout would not help because nothing will ever start listening. Removing the wait step or changing the host would violate the requirement that the check remain in place and verify localhost:5432. The correct fix is to add a PostgreSQL service image (e.g., circleci/postgres) as a second entry in the job's `docker:` list, which exposes the database on localhost:5432 to the primary container so the wait step succeeds.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 2396,
+      ""OutputTokens"": 384
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKNEWBFV0E79BNS232DZWC,anthropic,Claude Fable 5.1 (high thinking),claude-fable-5-1,build/koan05/triage - ruby missing after checkout,Passed,12.201s,1262,434,0.034320,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Ruby Missing: Add Ruby Orb"",
+    ""Explanation"": [
+      ""The step list shows only Spin up environment, Preparing environment variables, Checkout code, and then `ruby -v`, with no step between checkout and `ruby -v`; the config has only a placeholder comment where an install step should be. So no install was attempted (install_attempted=false), and `ruby -v` fails with exit 127 'command not found' because cimg/base:stable ships without Ruby. The requirement says the base image must remain unchanged and Ruby 2.6.3 exactly must be provided from within the config. Changing the base image is disallowed; increasing the timeout is irrelevant to a 'command not found' error; installing via apt is not shown as a viable path in the artifacts and would not reliably pin exactly 2.6.3. The config explicitly has an `orbs:` section with an '# Add Orb here' placeholder and a step placeholder to install Ruby 2.6.3, which matches the CircleCI Ruby orb (circleci/ruby) with its `ruby/install` command taking a version parameter (2.6.3). Therefore the correct fix is to add the Ruby orb and use its install step.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1262,
+      ""OutputTokens"": 434
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKNTSN1HXFMYZXCKGAJYCB,anthropic,Claude Fable 5.1 (high thinking),claude-fable-5-1,build/koan06/triage - yarn offline cache miss,Passed,9.918s,1690,588,0.046300,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Yarn Offline Cache Triage"",
+    ""Explanation"": [
+      ""The frozen step list shows only Spin up environment, Preparing environment variables, Checkout code, and Install Dependencies; there is no restore_cache step, and in config.yml both restore_cache and save_cache are commented out, so no cache was restored in this run (cache_restored: false). The job log explicitly states 'info No lockfile found.', meaning yarn.lock does not exist in the repository, so it cannot be the checksum target; the only shown repository file that declares dependencies is package.json (also hinted by the step names 'Restore/Save Yarn Package Json Cache'), so the cache key should use checksum of package.json. Because --offline must stay and the offline install can only succeed if a populated ~/.cache/yarn is carried between builds, the job needs both the restore_cache step (before install) and the save_cache step (after install) enabled, i.e. enable_restore_and_save_cache.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1690,
+      ""OutputTokens"": 588
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKP4FPRFNW2CZ1HB14WNTS,anthropic,Claude Fable 5.1 (high thinking),claude-fable-5-1,test/koan07/triage - junit written not published,Passed,7.895s,1758,406,0.037880,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Test Results Reporting Triage"",
+    ""Explanation"": [
+      ""The job.log shows the 'Run tests' step echoed 'Wrote ~/project/results/test_results.xml' after the redirect to that file, so the results file was produced. The step then ran 'exit 1', and steps.txt shows 'Run tests FAILED' with 'CircleCI received exit code 1', so the job did not succeed. The config.yml contains only 'checkout' and one 'run' step; there is no 'store_test_results' step (needed for the Test Summary tab) and no 'store_artifacts' step (needed to export the file as a job artifact). Because both reporting requirements are missing, the fix that satisfies both (a) Test Summary and (b) artifact export is to add both 'store_test_results' and 'store_artifacts' steps pointing at the results directory. Removing 'exit 1' alone would only affect job status, not result reporting, and 'set_upload_true' is not a valid CircleCI step option.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1758,
+      ""OutputTokens"": 406
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKPC6ECZGH30JCS0T31EAV,anthropic,Claude Fable 5.1 (high thinking),claude-fable-5-1,deploy/koan08/triage - deploy ran off production,Passed,5.796s,1592,356,0.033720,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI deploy job missing branch filter"",
+    ""Explanation"": [
+      ""The workflow.txt shows workflow build-test-and-deploy finished SUCCESS with all three jobs SUCCESS, so the pipeline is green. However, the run was on branch `koans-08-branch-filters`, not `production`, and the `deploy` job still ran and succeeded. The requirement says `deploy` must run only for commits to `production`, so the behaviour is incorrect. The config has no `filters` on the `deploy` workflow entry; `requires` only orders jobs and does not restrict branches. The fix is to add `filters: branches: only: production` to the `deploy` job's workflow entry (`build` and `test-production` have no restriction requirement, so they should not be changed; ignoring non-production branches would be an inverted/unnecessary approach; filters belong in the workflow entry, not the job definition).""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1592,
+      ""OutputTokens"": 356
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKPHVK0BNYQ782539KNS6A,anthropic,Claude Fable 5.1 (high thinking),claude-fable-5-1,test/koan04/triage - parallelism without split,Passed,7.841s,2507,373,0.043720,"{
+  ""each_node_ran_full_suite"": true,
+  ""fix"": ""use_circleci_tests_split"",
+  ""suite_split"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI parallel test split not applied"",
+    ""Explanation"": [
+      ""The `test` job has `parallelism: 2`. The Run tests command does call `circleci tests split`, and the logs show the split worked (node 0 got src/test_goodbye.sh, node 1 got src/test_hello.sh), but the for loop iterates over the raw glob `src/test_*.sh` instead of the contents of /tmp/split.txt. Consequently both nodes ran both files (\""Ran 2 file(s); split list had 1\"") and the guard failed each node with exit 1. So the suite did not actually split (suite_split=false) and every node ran the full suite (each_node_ran_full_suite=true). The fix is to actually consume the `circleci tests split` output in the loop (e.g. iterate over /tmp/split.txt), so each node runs only its assigned files; this keeps parallelism, leaves the workflow untouched, and makes the RAN==EXPECTED check pass.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""each_node_ran_full_suite\"": true,"",
+      ""  \""fix\"": \""use_circleci_tests_split\"","",
+      ""  \""suite_split\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""each_node_ran_full_suite\"": true,"",
+        ""  \""fix\"": \""use_circleci_tests_split\"","",
+        ""  \""suite_split\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 2507,
+      ""OutputTokens"": 373
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKPSGP17ZDY6F17B918SWB,anthropic,Claude Fable 5.1 (high thinking),claude-fable-5-1,deploy/koan09/triage - deploy ran without beta tag,Passed,14.733s,1726,765,0.055510,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_tags_only_beta"",
+  ""fix_target_job"": ""all_jobs"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI Tag Filter Triage for Deploy Job"",
+    ""Explanation"": [
+      ""The workflow summary shows all three jobs SUCCESS, so the run was green. However, the trigger was an untagged branch push (branch koans-09-tag-filters, no tag) and the deploy job still ran, which violates the requirement that untagged pushes must not deploy; the config has no filters at all, so deploy runs on every push. `requires` alone cannot gate on tags. To meet the full requirement, deploy needs `filters: tags: only: /^beta-.*/` with `branches: ignore: /.*/`. But CircleCI does not run jobs on tag pushes unless they have a tags filter, and a filtered deploy that requires unfiltered build/test would never run (or the workflow would be incomplete) on tag `beta-main-0.1.1`. Therefore build and test must also receive tag filters so the whole chain runs on the beta tag and the workflow is green and deploys. The change is a filters block on the workflow entries of all jobs, restricting tags to beta.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_tags_only_beta\"","",
+      ""  \""fix_target_job\"": \""all_jobs\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_tags_only_beta\"","",
+        ""  \""fix_target_job\"": \""all_jobs\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1726,
+      ""OutputTokens"": 765
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKQ7X3THM7EP7KTEMXR5PW,anthropic,Claude Fable 5.1 (high thinking),claude-fable-5-1,build/koan13/triage - workspace missing apps,Passed,6.599s,2287,395,0.042620,"{
+  ""builds_green"": true,
+  ""deploy_green"": false,
+  ""fix"": ""persist_app_paths"",
+  ""workspace_had_apps"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI deploy failure: app paths not persisted"",
+    ""Explanation"": [
+      ""The workflow summary shows build-linux, build-mac, and build-windows all SUCCESS, so builds_green is true. The deploy job is FAILED (its 'Verify apps present' step exited with code 1), so deploy_green is false. The job.log shows the attached workspace contained only ./meta/\u003cplatform\u003e/build.txt files and none of the app/\u003cplatform\u003e/app.* files, so workspace_had_apps is false. Root cause: each build job's persist_to_workspace only lists meta/\u003cplatform\u003e under paths, never app/\u003cplatform\u003e, so the app files are never carried to deploy. The correct fix is to persist the app paths (app/linux, app/windows, app/mac) from each build job so they are attached in deploy; storing artifacts only on builds would not make them available in deploy, fixing one platform would still fail the other two tests, changing attach_workspace does nothing when the data was never persisted, and removing verification would violate the requirement that deploy verifies presence.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""builds_green\"": true,"",
+      ""  \""deploy_green\"": false,"",
+      ""  \""fix\"": \""persist_app_paths\"","",
+      ""  \""workspace_had_apps\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""builds_green\"": true,"",
+        ""  \""deploy_green\"": false,"",
+        ""  \""fix\"": \""persist_app_paths\"","",
+        ""  \""workspace_had_apps\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 2287,
+      ""OutputTokens"": 395
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKN6Y4QKWTHK8MXBYQ6NTB,openai,GPT-6 Astra (high reasoning),gpt-6-astra,test/koan03/triage - wait for db connection refused,Passed,11.493s,1349,327,0.029840,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing PostgreSQL Service in CircleCI"",
+    ""Explanation"": [
+      ""The config declares only the Node image and has no PostgreSQL service or database startup step. Dockerize installed successfully and ran, but localhost:5432 refused connections until the timeout. Add a PostgreSQL service image alongside the Node image so the database can accept connections, while keeping the existing wait check.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1349,
+      ""OutputTokens"": 327
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKNJ5B29WN5GKVV4Z9A5TV,openai,GPT-6 Astra (high reasoning),gpt-6-astra,build/koan05/triage - ruby missing after checkout,Passed,11.164s,584,466,0.029140,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Install Ruby 2.6.3 before verification"",
+    ""Explanation"": [
+      ""Neither the config nor the executed step list contains a Ruby installation step. The command fails with `ruby: command not found`. Add a Ruby orb and its installation step configured for exactly Ruby 2.6.3 before `ruby -v`, keeping `cimg/base:stable` unchanged.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 584,
+      ""OutputTokens"": 466
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKNX27GXYBP38M31QR9ZNX,openai,GPT-6 Astra (high reasoning),gpt-6-astra,build/koan06/triage - yarn offline cache miss,Passed,13.59s,813,452,0.030730,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing Yarn Cache Steps"",
+    ""Explanation"": [
+      ""Both cache steps are commented out, and the executed step list shows no cache restoration before installation. Yarn reports no lockfile, so the key should checksum package.json to track declared dependency changes. Enable restore_cache before installation and save_cache afterward for ~/.cache/yarn, keeping --offline unchanged. Offline installation still requires a populated cache; the artifacts do not establish that one is available.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 813,
+      ""OutputTokens"": 452
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKPAAZ1XQWF8QNWP3QBMQY,openai,GPT-6 Astra (high reasoning),gpt-6-astra,test/koan07/triage - junit written not published,Passed,9.583s,857,354,0.026270,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""CircleCI test result reporting"",
+    ""Explanation"": [
+      ""The log confirms the results file was written before the explicit exit 1, which caused the job to fail. The config contains neither reporting step. Add store_test_results with path ~/project/results for the Test Summary tab and store_artifacts with path ~/project/results/test_results.xml for later inspection.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 857,
+      ""OutputTokens"": 354
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKPKPE6PXMNB6DHXEZVM58,openai,GPT-6 Astra (high reasoning),gpt-6-astra,deploy/koan08/triage - deploy ran off production,Passed,17.271s,752,350,0.025020,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Restrict Deployment to Production"",
+    ""Explanation"": [
+      ""The workflow and all jobs finished SUCCESS, so this run was green. However, deploy ran on koans-08-branch-filters rather than production, violating the requirement. Add filters.branches.only: production to deploy's workflow entry. This leaves build and test-production unrestricted and preserves the production dependency chain. No production run is shown in the artifacts.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 752,
+      ""OutputTokens"": 350
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKQ4J6NQ6CH063J75T0X9R,openai,GPT-6 Astra (high reasoning),gpt-6-astra,test/koan04/triage - parallelism without split,Passed,9.664s,1255,437,0.034400,"{
+  ""each_node_ran_full_suite"": true,
+  ""fix"": ""use_circleci_tests_split"",
+  ""suite_split"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Execute Each Node’s Assigned Tests"",
+    ""Explanation"": [
+      ""The test job sets parallelism to 2. Each node received a distinct one-file split list, but the loop ignored that list and executed both test scripts on both nodes. Both nodes then failed because RAN was 2 while EXPECTED was 1. Execute only the files in /tmp/split.txt on each node instead of looping over src/test_*.sh. This preserves the workflow, covers the suite exactly once, and resolves the observed failures.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""each_node_ran_full_suite\"": true,"",
+      ""  \""fix\"": \""use_circleci_tests_split\"","",
+      ""  \""suite_split\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""each_node_ran_full_suite\"": true,"",
+        ""  \""fix\"": \""use_circleci_tests_split\"","",
+        ""  \""suite_split\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1255,
+      ""OutputTokens"": 437
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKQE07D6V3QMWCY32CX738,openai,GPT-6 Astra (high reasoning),gpt-6-astra,deploy/koan09/triage - deploy ran without beta tag,Passed,15.055s,835,591,0.037900,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_tags_only_beta"",
+  ""fix_target_job"": ""all_jobs"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Green Workflow, Incorrect Deployment Filtering"",
+    ""Explanation"": [
+      ""The workflow summary reports SUCCESS, so the run was green. However, deploy ran in the recorded API-triggered branch workflow, with no beta tag shown, violating the deployment requirement. Add workflow-level tag filters to build, test, and deploy that accept beta tags, such as /^beta-.*$/. Deploy must also ignore all branches. Build and test need tag filters because they are prerequisites; changing deploy alone would not enable the required green, deploying beta-tag workflow.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_tags_only_beta\"","",
+      ""  \""fix_target_job\"": \""all_jobs\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_tags_only_beta\"","",
+        ""  \""fix_target_job\"": \""all_jobs\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 835,
+      ""OutputTokens"": 591
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3QKQWPQ1CMFWJNWDM7HPBZK,openai,GPT-6 Astra (high reasoning),gpt-6-astra,build/koan13/triage - workspace missing apps,Passed,9.439s,1205,311,0.027600,"{
+  ""builds_green"": true,
+  ""deploy_green"": false,
+  ""fix"": ""persist_app_paths"",
+  ""workspace_had_apps"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Persist Apps for Deployment"",
+    ""Explanation"": [
+      ""The workflow summary shows all three build jobs succeeded, but deploy failed. The attached workspace contained only the three metadata files, and app verification exited with status 1. Each build persists its metadata directory but not its generated app. Add app/linux, app/windows, and app/mac to the respective build jobs’ persist_to_workspace paths, keeping root: . and the existing deploy steps. This makes all three apps available for verification and artifact upload in deploy.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""builds_green\"": true,"",
+      ""  \""deploy_green\"": false,"",
+      ""  \""fix\"": \""persist_app_paths\"","",
+      ""  \""workspace_had_apps\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""builds_green\"": true,"",
+        ""  \""deploy_green\"": false,"",
+        ""  \""fix\"": \""persist_app_paths\"","",
+        ""  \""workspace_had_apps\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1205,
+      ""OutputTokens"": 311
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"

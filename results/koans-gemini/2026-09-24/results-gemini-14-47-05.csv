@@ -1,0 +1,471 @@
+TraceID,Provider,Run,Model,Task,Status,Duration,InputTokens,OutputTokens,EstCostUSD,Answer,Details
+01M3AP5VMY7F3DDXD58YKXSCX6,anthropic,Claude Opus 5.5 (high thinking),claude-opus-5-5,test/koan03/triage - wait for db connection refused,Passed,6.687s,2173,416,0.017012,"{
+  ""fix"": ""add_postgres_service_image"",
+  ""root_cause"": ""no_postgres_service_container""
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing Postgres Service Container in CircleCI"",
+    ""Explanation"": [
+      ""The job's only Docker image is circleci/node, and no PostgreSQL service container is defined in the `docker:` section. The dockerize step installed correctly, since the binary ran and produced output. It then polled localhost:5432 and got 'connection refused' every time for the full minute. That means nothing was listening on the port at all; the database was not simply slow to start."",
+      """",
+      ""In CircleCI, every image listed after the first under `docker:` runs as a service container. Service containers share the primary container's network, so they are reachable on localhost."",
+      """",
+      ""The fix is to add a Postgres image as a secondary image, for example:"",
+      """",
+      ""```yaml"",
+      ""docker:"",
+      ""  - image: circleci/node"",
+      ""  - image: circleci/postgres:9.6-alpine"",
+      ""    environment:"",
+      ""      POSTGRES_USER: root"",
+      ""      POSTGRES_DB: circle_test"",
+      ""```"",
+      """",
+      ""With this in place, dockerize will find the database on localhost:5432 and the job will go green. Changing the timeout, host or port would not help, because no database exists to connect to.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_postgres_service_image\"","",
+      ""  \""root_cause\"": \""no_postgres_service_container\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_postgres_service_image\"","",
+        ""  \""root_cause\"": \""no_postgres_service_container\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 2173,
+      ""OutputTokens"": 416
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3AP625YPDDEDXB595B02001,anthropic,Claude Opus 5.5 (high thinking),claude-opus-5-5,build/koan05/triage - ruby missing after checkout,Passed,4.327s,995,294,0.009860,"{
+  ""fix"": ""add_ruby_orb"",
+  ""install_attempted"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Missing Ruby Orb Install Step"",
+    ""Explanation"": [
+      ""The log shows 'ruby: command not found' (exit code 127), which means `ruby -v` ran on the plain `cimg/base:stable` image. The config has only placeholder comments where the orb and install step should go, so no Ruby install was ever attempted. The requirement is to use the `circleci/ruby` orb. The fix is to declare the orb and add an install step before `ruby -v`:"",
+      """",
+      ""```yaml"",
+      ""orbs:"",
+      ""  ruby: circleci/ruby@x.y.z"",
+      ""```"",
+      """",
+      ""and, after `checkout`:"",
+      """",
+      ""```yaml"",
+      ""- ruby/install:"",
+      ""    version: '2.6.3'"",
+      ""```"",
+      """",
+      ""Replace `x.y.z` with an actual version of the orb.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_ruby_orb\"","",
+      ""  \""install_attempted\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_ruby_orb\"","",
+        ""  \""install_attempted\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 995,
+      ""OutputTokens"": 294
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3AP66D6VHMV1WV9E0WXBZBY,anthropic,Claude Opus 5.5 (high thinking),claude-opus-5-5,build/koan06/triage - yarn offline cache miss,Passed,9.407s,1427,861,0.022928,"{
+  ""cache_restored"": false,
+  ""checksum_target"": ""package.json"",
+  ""fix"": ""enable_restore_and_save_cache""
+}","{
+  ""Answer"": {
+    ""Title"": ""Enable Yarn cache keyed on package.json"",
+    ""Explanation"": [
+      ""The build failed because `yarn install --offline` needs packages already in the local Yarn cache (`~/.cache/yarn`). The log shows no cache was restored, since the `restore_cache` step is commented out. The cache was empty (\""possible versions are \\\""\\\""\""), so Yarn could not resolve left-pad@1.3.0. The log also shows \""info No lockfile found\"", so there is no yarn.lock to checksum. That matches the requirement to cache based on `package.json`."",
+      """",
+      ""Because `--offline` cannot be removed, both cache steps must be enabled:"",
+      ""1. `restore_cache` before the install step, with keys such as `v1-yarn-packages-{{ checksum \""package.json\"" }}`, plus an optional fallback such as `v1-yarn-packages-`."",
+      ""2. `save_cache` after the install step, with key `v1-yarn-packages-{{ checksum \""package.json\"" }}` and paths `~/.cache/yarn`."",
+      """",
+      ""Using only one step does not work. Restore alone never fills the cache. Save alone never feeds later builds."",
+      """",
+      ""Note: with the `--offline` flag fixed, the very first run still has nothing to restore. `save_cache` only runs if the install succeeds, so something has to put packages into `~/.cache/yarn` once before the first save. Examples are a one-time online install or seeding the cache another way. After that, later builds can restore it."",
+      """",
+      ""Forcing a new cache save: CircleCI caches are immutable, and an existing key is never overwritten. To force a fresh save, change the key. For example, bump the version prefix from `v1-` to `v2-` in both the restore and save keys. Changing `package.json` also changes the checksum and produces a new key automatically.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""cache_restored\"": false,"",
+      ""  \""checksum_target\"": \""package.json\"","",
+      ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""cache_restored\"": false,"",
+        ""  \""checksum_target\"": \""package.json\"","",
+        ""  \""fix\"": \""enable_restore_and_save_cache\"""",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1427,
+      ""OutputTokens"": 861
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3AP6FK79Z7QHYWQHNY8P1FD,anthropic,Claude Opus 5.5 (high thinking),claude-opus-5-5,test/koan07/triage - junit written not published,Passed,10.123s,1459,919,0.024216,"{
+  ""fix"": ""add_store_test_results_and_store_artifacts"",
+  ""job_green"": false,
+  ""missing_store_artifacts"": true,
+  ""missing_store_test_results"": true,
+  ""results_produced"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Add store_test_results and store_artifacts steps"",
+    ""Explanation"": [
+      ""The log shows 'Wrote ~/project/results/test_results.xml', so the JUnit XML file is produced. The job is still red because the run step ends with `exit 1`, and CircleCI reports exit code 1."",
+      """",
+      ""The config has no `store_test_results` step and no `store_artifacts` step. Without them, CircleCI never collects the file. The test summary tab stays empty and nothing is saved as an artifact."",
+      """",
+      ""The fix is to add both steps after the test step:"",
+      """",
+      ""- store_test_results:"",
+      ""    path: ~/project/results"",
+      ""- store_artifacts:"",
+      ""    path: ~/project/results/test_results.xml"",
+      """",
+      ""`store_test_results` fills the test summary tab and `store_artifacts` keeps the file for later inspection."",
+      """",
+      ""The other options fall short:"",
+      ""- **`set_upload_true`**: this is not a real CircleCI mechanism."",
+      ""- **Adding only one step**: this meets only half the requirement."",
+      ""- **Removing only `exit 1`**: this turns the job green but still uploads nothing."",
+      """",
+      ""The `exit 1` may stand for a real test failure. In that case, the upload steps may be skipped after the failed step, since steps by default run only on success. I am not certain whether CircleCI's special upload steps follow the same rule. If they do, add `when: always` to both steps so results are collected even on failure. Otherwise, remove the `exit 1` if the failure is not wanted.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+      ""  \""job_green\"": false,"",
+      ""  \""missing_store_artifacts\"": true,"",
+      ""  \""missing_store_test_results\"": true,"",
+      ""  \""results_produced\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""fix\"": \""add_store_test_results_and_store_artifacts\"","",
+        ""  \""job_green\"": false,"",
+        ""  \""missing_store_artifacts\"": true,"",
+        ""  \""missing_store_test_results\"": true,"",
+        ""  \""results_produced\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1459,
+      ""OutputTokens"": 919
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3AP6SFKW9Y8DJT2HJCHE86P,anthropic,Claude Opus 5.5 (high thinking),claude-opus-5-5,deploy/koan08/triage - deploy ran off production,Passed,5.31s,1393,409,0.013752,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_branches_only_production"",
+  ""fix_target_job"": ""deploy"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Deploy runs on non-production branch"",
+    ""Explanation"": [
+      ""The pipeline (#151) is green: build, test-production and deploy all succeeded. However, it ran on branch `koans-08-branch-filters`, not `production`, and the deploy job still executed. The workflow has no branch filter, so every branch triggers deploy, which violates the requirement that deploy only runs on commits to `production`. A green pipeline therefore does not mean the requirement is met. The `requires` keys only enforce ordering (build → test-production → deploy); they do not restrict which branches a job runs on. The fix is to add a `filters.branches.only: production` block to the `deploy` job entry in the workflow, not to the job definition under `jobs:`. build and test-production can continue running on every branch:"",
+      """",
+      ""```yaml"",
+      ""- deploy:"",
+      ""    requires:"",
+      ""      - test-production"",
+      ""    filters:"",
+      ""      branches:"",
+      ""        only: production"",
+      ""```"",
+      """",
+      ""An `ignore` list would require naming every non-production branch, which is fragile. `only: production` expresses the requirement directly.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_branches_only_production\"","",
+      ""  \""fix_target_job\"": \""deploy\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_branches_only_production\"","",
+        ""  \""fix_target_job\"": \""deploy\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1393,
+      ""OutputTokens"": 409
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3AP6YNJ39CW0YHH9EDDTDY3,anthropic,Claude Opus 5.5 (high thinking),claude-opus-5-5,test/koan04/triage - parallelism without split,Passed,8.452s,2148,473,0.018052,"{
+  ""each_node_ran_full_suite"": true,
+  ""fix"": ""use_circleci_tests_split"",
+  ""suite_split"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Parallelism 2 but suite not split"",
+    ""Explanation"": [
+      ""The config sets `parallelism: 2`, and the log confirms it: CIRCLE_NODE_TOTAL=2, with containers at index 0 and index 1."",
+      """",
+      ""The suite did not actually split. `circleci tests split --split-by=name` did compute a correct split and wrote it to /tmp/split.txt. Node 0 was assigned src/test_goodbye.sh and node 1 was assigned src/test_hello.sh."",
+      """",
+      ""The loop ignores that list, though. It iterates over the raw glob `for f in src/test_*.sh`, so each node ran both test files, meaning the full suite. The log shows both nodes running test_goodbye.sh and test_hello.sh."",
+      """",
+      ""This caused the failure. RAN=2 did not equal EXPECTED=1, so the guard exited with status 1 on both containers."",
+      """",
+      ""The fix is to run only the files that `circleci tests split` assigns to each node. For example, loop over `$(cat /tmp/split.txt)`, or pipe the glob through the split output into the runner. This keeps the workflow structure and the parallelism setting unchanged. Each node then runs one file, RAN equals EXPECTED, and the build goes green.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""each_node_ran_full_suite\"": true,"",
+      ""  \""fix\"": \""use_circleci_tests_split\"","",
+      ""  \""suite_split\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""each_node_ran_full_suite\"": true,"",
+        ""  \""fix\"": \""use_circleci_tests_split\"","",
+        ""  \""suite_split\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 2148,
+      ""OutputTokens"": 473
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3AP76XQH9J46ZYNH6YC1GTG,anthropic,Claude Opus 5.5 (high thinking),claude-opus-5-5,deploy/koan09/triage - deploy ran without beta tag,Passed,15.119s,1477,1453,0.034968,"{
+  ""behaviour_correct"": false,
+  ""fix"": ""filters_tags_only_beta"",
+  ""fix_target_job"": ""all_jobs"",
+  ""pipeline_green"": true
+}","{
+  ""Answer"": {
+    ""Title"": ""Deploy ran on branch commit; beta tag filters needed"",
+    ""Explanation"": [
+      ""The pipeline is green (build, test and deploy all succeeded), but the behaviour is wrong. The run came from a plain branch commit (branch koans-09-tag-filters, triggered by API, with no tag), and `deploy` still ran. The config has no filters, so by default CircleCI runs every job on every branch push and never on tags. That is the opposite of the requirement."",
+      """",
+      ""The fix is to add `filters.tags.only: /^beta-.*/` to the workflow job entries. This matches tags like beta-main-0.1.1 and excludes alpha- tags. The `deploy` entry also needs `filters.branches.ignore: /.*/` so it never runs for untagged branch commits."",
+      """",
+      ""The tag filter must go on `build` and `test` as well as `deploy`. CircleCI only runs a job for a tag if the job has a tags filter, and `deploy` requires `test`, which requires `build`. If the upstream jobs lack the tag filter, they never run on a beta tag, and `deploy` cannot run either."",
+      """",
+      ""Example:"",
+      ""- build: filters: {tags: {only: /^beta-.*/}}"",
+      ""- test: requires [build], filters: {tags: {only: /^beta-.*/}}"",
+      ""- deploy: requires [test], filters: {tags: {only: /^beta-.*/}, branches: {ignore: /.*/}}"",
+      """",
+      ""With these filters, the build and test entries have no branch filter, so those two jobs still run on branch commits, which the requirement allows. Only `deploy` is restricted."",
+      """",
+      ""Filters belong in the workflow job entries, not in the job definitions. `requires` alone cannot restrict when jobs run.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""behaviour_correct\"": false,"",
+      ""  \""fix\"": \""filters_tags_only_beta\"","",
+      ""  \""fix_target_job\"": \""all_jobs\"","",
+      ""  \""pipeline_green\"": true"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""behaviour_correct\"": false,"",
+        ""  \""fix\"": \""filters_tags_only_beta\"","",
+        ""  \""fix_target_job\"": \""all_jobs\"","",
+        ""  \""pipeline_green\"": true"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1477,
+      ""OutputTokens"": 1453
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"
+01M3AP7NP9BME8W3HDDNV4EFXP,anthropic,Claude Opus 5.5 (high thinking),claude-opus-5-5,build/koan13/triage - workspace missing apps,Passed,6.373s,1982,550,0.018928,"{
+  ""builds_green"": true,
+  ""deploy_green"": false,
+  ""fix"": ""persist_app_paths"",
+  ""workspace_had_apps"": false
+}","{
+  ""Answer"": {
+    ""Title"": ""Deploy fails because app files were never persisted"",
+    ""Explanation"": [
+      ""The workflow summary shows that build-linux, build-mac and build-windows all succeeded. Only the deploy job failed."",
+      """",
+      ""The cause is in what each build job saves. Each one runs persist_to_workspace with a root of '.', but the paths list only its metadata directory (meta/linux, meta/windows or meta/mac). The app/\u003cplatform\u003e directories that hold the generated app files are never added to the workspace."",
+      """",
+      ""The deploy log confirms this. After attach_workspace, the only files present are ./meta/linux/build.txt, ./meta/mac/build.txt and ./meta/windows/build.txt. The step `test -f app/linux/app.linux` therefore fails with exit code 1, and deploy fails before store_artifacts runs."",
+      """",
+      ""The fix is to add app/\u003cplatform\u003e to the persist_to_workspace paths in each build job (for example, paths: [meta/linux, app/linux]). With the apps persisted, attach_workspace at '.' will restore app/linux, app/windows and app/mac, the verification step will pass, and store_artifacts will upload the app directory."",
+      """",
+      ""The other options would not work:"",
+      ""- Storing artifacts in the build jobs does not deliver the files to deploy."",
+      ""- Fixing only one platform leaves the other two tests failing."",
+      ""- Changing only attach_workspace cannot restore files that were never persisted."",
+      ""- Removing only the verification step would hide the problem and upload no apps.""
+    ],
+    ""ActualAnswer"": [
+      ""{"",
+      ""  \""builds_green\"": true,"",
+      ""  \""deploy_green\"": false,"",
+      ""  \""fix\"": \""persist_app_paths\"","",
+      ""  \""workspace_had_apps\"": false"",
+      ""}""
+    ],
+    ""ExpectedAnswer"": [
+      [
+        ""{"",
+        ""  \""builds_green\"": true,"",
+        ""  \""deploy_green\"": false,"",
+        ""  \""fix\"": \""persist_app_paths\"","",
+        ""  \""workspace_had_apps\"": false"",
+        ""}""
+      ]
+    ],
+    ""Usage"": {
+      ""InputTokens"": 1982,
+      ""OutputTokens"": 550
+    }
+  },
+  ""Validation"": {
+    ""Title"": ""Response Assessment"",
+    ""Explanation"": [
+      ""Response matches one of the accepted answers.""
+    ],
+    ""Usage"": {}
+  },
+  ""Error"": {
+    ""Title"": """",
+    ""Message"": """",
+    ""Details"": null,
+    ""Usage"": {}
+  }
+}"

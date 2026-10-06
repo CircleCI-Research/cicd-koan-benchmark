@@ -1,0 +1,4 @@
+Spin up environment              SUCCESS  3s
+Preparing environment variables  SUCCESS  0s
+Checkout code                    SUCCESS  0s
+ruby -v                          FAILED   0s
