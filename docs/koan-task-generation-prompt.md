@@ -32,7 +32,7 @@ Rules:
 Write eight tasks, one per Koan.
 
 ## Question Scope for 3 Cases
-koan04 — What is `parallelism` set to, and did the suite actually split across nodes? NOTE: parallelism IS configured; a prompt that invites "parallelism isn't set" is wrong-scoped.
+koan04 — What is `parallelism` set to, and did the suite actually split across nodes? Parallelism IS configured; a prompt that invites "parallelism isn't set" is wrong-scoped.
 
 koan06 - The --offline flag is fixed and must not be changed. Ask which cache steps are missing and which file the key should checksum, given that constraint.
       
@@ -131,7 +131,7 @@ koan07 — What change makes results appear in the test summary tab AND as an ar
 
 ### koans-07
 
-Lock to the frozen throwaway: the job is red (`exit 1`). There is no
+Lock to the frozen branch: the job is red (`exit 1`). There is no
 `build-tools` orb. Do not write a prompt that claims the job is green.
 
 ```yaml

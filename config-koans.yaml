@@ -129,7 +129,7 @@ config:
         max-retry-attempts: 2
         initial-delay-seconds: 10
       runs:
-        - name: "Gemini 3.1 Pro (SUB for 3.5 Pro)"
+        - name: "Gemini 3.1 Pro"
           model: "gemini-3.1-pro-preview"  
           max-requests-per-minute: 10
           model-parameters:

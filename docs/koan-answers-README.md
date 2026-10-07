@@ -5,8 +5,8 @@ folder. `expected-result` in any generated
 [MindTrial](https://github.com/petmal/MindTrial) task must match **Correct
 Fix** / the contract table below. A model may draft prompt wrapping only. It must not invent these keys.
 
-Ground truth is the frozen throwaway branch, not the public Koan README, when
-the two disagree.
+Ground truth is the frozen branch, not the public Koan README, when the two
+disagree.
 
 ## koans-03-databases 
 
@@ -110,7 +110,7 @@ and what must be enabled and keyed to which file?
 
 **Goals:** Get a green build. Have test results displayed in the test summary tab. Export the test results to an artifact. Share link to a green job.
 
-**Frozen vs public (lock to frozen):** The public README says tests already passed and implies a green job missing only publish steps. The frozen throwaway writes a passing JUnit suite to `~/project/results/test_results.xml` and then `exit 1`. Step `Run tests` FAILED. The job is **red**. There is no `build-tools` orb and no `upload:` flag in this freeze.
+**Frozen vs public (lock to frozen):** The public README says tests already passed and implies a green job missing only publish steps. The frozen branch writes a passing JUnit suite to `~/project/results/test_results.xml` and then `exit 1`. Step `Run tests` FAILED. The job is **red**. There is no `build-tools` orb and no `upload:` flag in this freeze.
 
 **Error:** JUnit XML is written (`Wrote ~/project/results/test_results.xml`) but never published. Neither `store_test_results` nor `store_artifacts` is present, so the test summary tab shows no results and no artifact is stored. The step then exits 1.
 

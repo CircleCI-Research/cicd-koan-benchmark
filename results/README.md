@@ -6,10 +6,6 @@ root [`README.md`](../README.md) summarize these files; this page says
 **which files produced which published figure** and which runs are kept
 because their failure mode is itself a finding.
 
-The write-up scores **15 models** (including GPT-5.6 Luna). Luna’s raw
-CSV/JSONL may still be landing here; other arms below are the checked-in
-canonical runs.
-
 ## Layout
 
 ```
@@ -63,14 +59,14 @@ in more than one file (e.g. models added after the first sweep).
 | `2026-09-29/results-gemini-15-18-31.*` | Claude Fable 5.1, GPT-6 Astra |
 
 Earlier directories under `2026-09-16/` and `2026-09-17/` are partial or
-pre-freeze sweeps (some only 5 tasks). They are retained for audit
-history; they are **not** in the published scoreboards.
+pre-freeze sweeps (some only 5 tasks). They are retained for history; they
+are **not** in the scoreboards above.
 
-## Finding worth keeping: koan 09
+## Koan 09
 
-Koan 09 (tag filters) is the hardest case in the study (22/42 across
-models × suites). Failures consistently select `fix_target_job: deploy`
-instead of `all_jobs`. That pattern is discussed in the article and in
+Koan 09 (tag filters) is the hardest case in the study. Failures consistently
+select `fix_target_job: deploy` instead of `all_jobs`. See the root
+[`README.md`](../README.md#prompt-wording-can-change-the-outcome-koan-09) and
 [`docs/koan-answers-README.md`](../docs/koan-answers-README.md).
 
 ## Expected-result contract

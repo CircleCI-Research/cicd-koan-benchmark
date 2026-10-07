@@ -14,18 +14,13 @@ Every case comes from a pipeline that actually failed. Every answer key comes
 from human feedback and CircleCI Training Koans — not from a model — so
 authoring models never decide what “correct” means.
 
-> **Publication status.** This repository is currently internal. It will be
-> reviewed by legal counsel before any public release. Scoreboards below match
-> the write-up draft. Raw run artifacts for GPT-5.6 Luna may still be landing
-> in [`results/`](results/); other arms are checked in through 2026-09-29.
-
 ---
 
 ## How to use this repo
 
 | If you want to… | Go to |
 |---|---|
-| See the published-style scoreboards | [Results](#results) below |
+| See the scoreboards | [Results](#results) below |
 | Inspect the evidence each task is built from | [`corpus/`](corpus/) |
 | Check an expected answer and why it is correct | [`docs/koan-answers-README.md`](docs/koan-answers-README.md) |
 | See how the three suites were authored | [`docs/koan-task-generation-prompt.md`](docs/koan-task-generation-prompt.md) |
@@ -76,18 +71,17 @@ counts × the model’s published per-million rates.
 - **$/task** = total spend across 24 observations ÷ 24  
 - **$/correct** = total spend ÷ tasks passed (wrong answers still cost money)
 
-Example from the write-up: Claude Opus 5.5 on koan-03 used 2,396 input and 468
-output tokens → about $0.0189 for that one task. Opus 5.5’s `/task` and
-`/correct` are identical because it never failed; DeepSeek’s rise from $0.0013
-to $0.0022 reflects failures it still paid for.
+For example, Claude Opus 5.5 on koan-03 used 2,396 input and 468 output tokens
+→ about $0.0189 for that one task. Opus 5.5’s `/task` and `/correct` are
+identical because it never failed; DeepSeek’s rise from $0.0013 to $0.0022
+reflects failures it still paid for.
 
 ---
 
 ## Results
 
-Numbers below mirror the write-up’s tables. Recompute from CSV/JSONL under
-[`results/`](results/) (see [`results/README.md`](results/README.md) for which
-files feed which figure).
+Recompute any figure from the CSV/JSONL under [`results/`](results/) (see
+[`results/README.md`](results/README.md) for which files feed which table).
 
 ### Breakdown across all koan suites
 
@@ -115,8 +109,8 @@ pipeline priorities.
 
 ### By stage (tied leaders)
 
-When several models tie on stage pass count, the write-up lists them with
-per-stage `$/correct` and median speed:
+When several models tie on stage pass count, they are listed with per-stage
+`$/correct` and median speed:
 
 | Stage | Model | Provider | Per-stage $/correct | Median |
 |---|---|---|---|---|
@@ -169,7 +163,7 @@ Task files: [`tasks-koans-chat.yaml`](tasks-koans-chat.yaml) ·
 [`tasks-koans-claude.yaml`](tasks-koans-claude.yaml) ·
 [`tasks-koans-gemini.yaml`](tasks-koans-gemini.yaml).
 
-### TL;DR (matches the write-up)
+### TL;DR
 
 | Priority | Pick | Why |
 |---|---|---|
