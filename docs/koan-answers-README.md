@@ -1,7 +1,8 @@
 # Koan answer keys (locked)
 
 Human-locked from the frozen configs, logs, and Koan READMEs in this `corpus/`
-folder. `expected-result` in any generated MindTrial task must match **Correct
+folder. `expected-result` in any generated
+[MindTrial](https://github.com/petmal/MindTrial) task must match **Correct
 Fix** / the contract table below. A model may draft prompt wrapping only. It must not invent these keys.
 
 Ground truth is the frozen throwaway branch, not the public Koan README, when
