@@ -34,9 +34,6 @@ and the frozen artifacts — no model contributed to them.
 | | | `workspace_had_apps` | `false` |
 | | | `fix` | `persist_app_paths` |
 
-Full requirements, the incorrect-fix distractors behind each enum, and the
-per-case question scope are in [`corpus/koan-answers-README.md`](corpus/koan-answers-README.md).
-
 ### Note on Koans 08 and 09
 
 These two cases look structurally identical but have different answers for
