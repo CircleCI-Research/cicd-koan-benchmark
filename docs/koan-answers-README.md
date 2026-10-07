@@ -7,7 +7,7 @@ Fix** / the contract table below. A model may draft prompt wrapping only. It mus
 Ground truth is the frozen throwaway branch, not the public Koan README, when
 the two disagree.
 
-## koans-03-databases ---------------------
+## koans-03-databases 
 
 **Requirement (Koan README):** The user is attempting to run a node web application which connects to a Postgresql database. The user wants to know how to add the database to their project.
 
@@ -29,28 +29,7 @@ Step list shows `install dockerize` SUCCESS, so the tool itself works. Nothing i
 **Question scope (koans-03):** Why does nothing respond on port 5432, and what
 config change provides the database?
 
-## koans-05-orbs --------------------------
-
-**Requirement (Koan README):** Add the Ruby Orb (`circleci/ruby`) to the config file and install Ruby version `2.6.3` with the orb. The build should be green if Ruby is installed properly. The README states the chosen image does not have Ruby.
-
-**Goals:** Add the Ruby Orb to the config file. Install Ruby version 2.6.3 with the orb. Build should be green if Ruby is installed properly.
-
-**Error:** `ruby -v` → `/bin/bash: ruby: command not found`, exit 127.
-
-Step list shows only four steps: environment, env vars, checkout, `ruby -v`. No step between checkout and `ruby -v`, so nothing attempted to install Ruby. The `orbs:` block contains only the comment `# Add Orb here`.
-
-**Incorrect Fix:**
-- Change the base image from `cimg/base:stable` to a Ruby image. Would produce a green build but does not satisfy the requirement to use the orb.
-- Install Ruby with `apt-get` in a `run` step. Same problem.
-- Install a Ruby version other than `2.6.3`.
-- Remove or replace the `ruby -v` step.
-
-**Correct Fix:** Declare `circleci/ruby` in the `orbs:` block and add the orb's install step, pinned to version `2.6.3`, before `ruby -v`.
-
-**Question scope (koans-05):** Did any step attempt to install Ruby, and what
-change satisfies the orb requirement?
-
-## koans-04-parallelism -------------------
+## koans-04-parallelism 
 
 **Requirement (Koan README):** Run the test scripts in parallel without modifying
 the workflow. Get a green build.
@@ -82,7 +61,29 @@ via `xargs` / a loop over the split list).
 **Question scope (koans-04):** Was the suite split across nodes, and what change
 makes each parallel container run only its shard?
 
-## koans-06-caching -----------------------
+## koans-05-orbs 
+
+**Requirement (Koan README):** Add the Ruby Orb (`circleci/ruby`) to the config file and install Ruby version `2.6.3` with the orb. The build should be green if Ruby is installed properly. The README states the chosen image does not have Ruby.
+
+**Goals:** Add the Ruby Orb to the config file. Install Ruby version 2.6.3 with the orb. Build should be green if Ruby is installed properly.
+
+**Error:** `ruby -v` → `/bin/bash: ruby: command not found`, exit 127.
+
+Step list shows only four steps: environment, env vars, checkout, `ruby -v`. No step between checkout and `ruby -v`, so nothing attempted to install Ruby. The `orbs:` block contains only the comment `# Add Orb here`.
+
+**Incorrect Fix:**
+- Change the base image from `cimg/base:stable` to a Ruby image. Would produce a green build but does not satisfy the requirement to use the orb.
+- Install Ruby with `apt-get` in a `run` step. Same problem.
+- Install a Ruby version other than `2.6.3`.
+- Remove or replace the `ruby -v` step.
+
+**Correct Fix:** Declare `circleci/ruby` in the `orbs:` block and add the orb's install step, pinned to version `2.6.3`, before `ruby -v`.
+
+**Question scope (koans-05):** Did any step attempt to install Ruby, and what
+change satisfies the orb requirement?
+
+
+## koans-06-caching 
 
 **Requirement (Koan README):** Store a cache of `package.json` so it can be restored in subsequent builds, and know what to do to force a new save of the cache. Specifically: uncomment the `save_cache` and `restore_cache` steps, update the `key` of each to point at the proper file, confirm a save then a restore, then edit the config to bust the cache so it stores a new one.
 
@@ -102,7 +103,7 @@ makes each parallel container run only its shard?
 **Question scope (koans-06):** Why does an offline install fail with no cache,
 and what must be enabled and keyed to which file?
 
-## koans-07-test-summary ------------------
+## koans-07-test-summary 
 
 **Requirement (Koan README):** Congrats, your tests have passed! Your test results were exported to `~/project/results/test_results.xml`. Display the test results in the test summary tab, and export the file as an artifact.
 
@@ -126,7 +127,7 @@ in the test summary tab and as an artifact. Do NOT ask what makes the job green 
 `exit 1` is freeze scaffolding, and a model naming it is answering a different
 question.
 
-## koans-08-branch-filters ----------------
+## koans-08-branch-filters 
 
 **Requirement (Koan README):** A workflow contains a `deploy` job. The `deploy` job should only ever run when committing to the `production` branch.
 
@@ -148,7 +149,7 @@ Overall: pipeline GREEN, behavior WRONG. The deploy job has no branch filter, so
 **Question scope (koans-08):** Is the observed behaviour correct for this branch,
 and what change restricts deploy to production?
 
-## koans-09-tag-filters -------------------
+## koans-09-tag-filters 
 
 **Requirement (Koan README):** `deploy` should only run for beta product tags
 (e.g. `beta-main-0.1.1`, `beta-secondary-0.1.1`), never for `alpha-*` tags.
@@ -185,7 +186,7 @@ an explicit tag filter — filtering `deploy` alone is not enough.
 push, and which jobs need tag filters so deploy both stays off branches and
 still runs on `beta-*` tags?
 
-## koans-13-workspaces --------------------
+## koans-13-workspaces
 
 **Requirement (Koan README):** Persist each platform app from the build jobs into
 the final `deploy` job, then upload all apps as artifacts.
