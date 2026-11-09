@@ -1,0 +1,77 @@
+version: 2.1
+
+jobs:
+  build-linux:
+    docker:
+      - image: cimg/base:2022.10
+    steps:
+      - run: mkdir -p app/linux
+      - run:
+          name: Generate app
+          command: echo app >> app/linux/app.linux
+      - run: cd ~/project/app && pwd && ls
+      - run: mkdir -p meta/linux && echo "platform=linux" > meta/linux/build.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - meta/linux
+
+  build-windows:
+    docker:
+      - image: cimg/base:2022.10
+    steps:
+      - run: mkdir -p app/windows
+      - run:
+          name: Generate app
+          command: echo app >> app/windows/app.windows
+      - run: cd ~/project/app && pwd && ls
+      - run: mkdir -p meta/windows && echo "platform=windows" > meta/windows/build.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - meta/windows
+
+  build-mac:
+    docker:
+      - image: cimg/base:2022.10
+    steps:
+      - run: mkdir -p app/mac
+      - run:
+          name: Generate app
+          command: echo app >> app/mac/app.mac
+      - run: cd ~/project/app && pwd && ls
+      - run: mkdir -p meta/mac && echo "platform=mac" > meta/mac/build.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - meta/mac
+
+  deploy:
+    docker:
+      - image: cimg/base:2022.10
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Verify apps present
+          command: |
+            echo "Workspace contents:"
+            find . -maxdepth 4 -type f | sort
+            test -f app/linux/app.linux
+            test -f app/windows/app.windows
+            test -f app/mac/app.mac
+      - store_artifacts:
+          path: app
+          destination: apps
+
+workflows:
+  build_and_deploy:
+    jobs:
+      - build-linux
+      - build-mac
+      - build-windows
+      - deploy:
+          requires:
+            - build-linux
+            - build-mac
+            - build-windows

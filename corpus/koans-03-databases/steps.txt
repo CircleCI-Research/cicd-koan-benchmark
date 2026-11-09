@@ -1,0 +1,6 @@
+Spin up environment              SUCCESS  10s
+Preparing environment variables  SUCCESS   0s
+Checkout code                    SUCCESS   0s
+echo "hello world"               SUCCESS   0s
+install dockerize                SUCCESS   0s
+Wait for db                      FAILED   1m 0s

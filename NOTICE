@@ -1,0 +1,19 @@
+CI/CD Koan Benchmark
+Copyright 2026 CircleCI
+
+This product includes software developed at CircleCI.
+
+---------------------------------------------------------------------------
+Third-party notices
+
+pricing/pricing.go
+  Copyright (C) 2025 Petr Malik
+  Licensed under the Mozilla Public License, v. 2.0.
+  You may obtain a copy of the MPL at https://mozilla.org/MPL/2.0/
+  Source project: https://github.com/petmal/MindTrial
+
+corpus/
+  Frozen teaching cases derived from the public CircleCI Training Koans:
+  https://github.com/CircleCI-Support/CircleCI-Training-Koans
+  (also mirrored at https://github.com/CircleCI-Archived/CircleCI-Training-Koans)
+---------------------------------------------------------------------------

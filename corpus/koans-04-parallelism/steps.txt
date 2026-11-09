@@ -1,0 +1,8 @@
+Spin up environment                SUCCESS  3s
+Spin up environment                SUCCESS  2s
+Preparing environment variables    SUCCESS  0s
+Preparing environment variables    SUCCESS  0s
+Checkout code                      SUCCESS  1s
+Checkout code                      SUCCESS  1s
+Run tests                          FAILED   0s
+Run tests                          FAILED   0s

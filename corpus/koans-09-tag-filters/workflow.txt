@@ -1,0 +1,15 @@
+pipeline:  #156
+branch:    koans-09-tag-filters      
+commit:    de37612 "Freeze koans-09-tag-filters from CircleCI-Training-Koans."
+trigger:   API
+
+workflow: build-test-and-deploy   SUCCESS   1m 02s
+  build             SUCCESS   22s
+  test              SUCCESS   4s
+  deploy            SUCCESS   29s        
+
+deploy job steps:
+  Spin up environment                SUCCESS  28s
+  Preparing environment variables    SUCCESS  0s
+  Checkout code                      SUCCESS  1s
+  echo "Deploy complete"             SUCCESS  0s

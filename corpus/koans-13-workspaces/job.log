@@ -1,0 +1,14 @@
+#!/bin/bash -eo pipefail
+echo "Workspace contents:"
+find . -maxdepth 4 -type f | sort
+test -f app/linux/app.linux
+test -f app/windows/app.windows
+test -f app/mac/app.mac
+
+Workspace contents:
+./meta/linux/build.txt
+./meta/mac/build.txt
+./meta/windows/build.txt
+
+Exited with code exit status 1
+CircleCI received exit code 1

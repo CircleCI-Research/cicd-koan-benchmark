@@ -1,0 +1,19 @@
+#!/bin/bash -eo pipefail
+dockerize -wait tcp://localhost:5432 -timeout 1m
+2026/08/17 20:38:17 Waiting for host: localhost:5432
+2026/08/17 20:38:17 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:38:22 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:38:27 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:38:32 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:38:37 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:38:42 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:38:47 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:38:52 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:38:57 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:39:02 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:39:07 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:39:12 Problem with dial: dial tcp 127.0.0.1:5432: getsockopt: connection refused. Sleeping 5s
+2026/08/17 20:39:17 Timeout after 1m0s waiting on dependencies to become available: [tcp://localhost:5432]
+
+Exited with code exit status 1
+CircleCI received exit code 1

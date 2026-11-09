@@ -1,0 +1,6 @@
+#!/bin/bash -eo pipefail
+ruby -v
+/bin/bash: ruby: command not found
+
+Exited with code exit status 127
+CircleCI received exit code 127
