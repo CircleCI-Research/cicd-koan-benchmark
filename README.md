@@ -29,23 +29,25 @@ Costs come from the `EstCostUSD` column, which uses `pricing/pricing.go` list pr
 
 Rule ([full rule](docs/tie-rule.md)): report the mean passes out of 24 and the min–max range across the five runs. Any model whose range overlaps the top model's range (23–24) is reported as tied.
 
-| Model | Provider | Mean /24 | Range | Per-run | $/correct | $/task | Median |
-|---|---|---|---|---|---|---|---|
-| GPT-5.6 Sol | OpenAI | 23.4 | 23–24 | 23, 23, 23, 24, 24 | $0.01407 | $0.01372 | 4.34s |
-| Claude Opus 5.5 | Anthropic | 23.4 | 23–24 | 23, 23, 23, 24, 24 | $0.01881 | $0.01834 | 6.82s |
-| Claude Opus 5 | Anthropic | 23.4 | 23–24 | 23, 24, 23, 24, 23 | $0.02461 | $0.02400 | 8.32s |
-| GPT-5.6 Luna | OpenAI | 23.2 | 23–24 | 24, 23, 23, 23, 23 | $0.00089 | $0.00086 | 4.15s |
-| Claude Fable 5.1 | Anthropic | 23.2 | 23–24 | 24, 23, 23, 23, 23 | $0.04269 | $0.04126 | 7.45s |
-| GPT-6 Astra | OpenAI | 23.0 | 23–23 | 23, 23, 23, 23, 23 | $0.03270 | $0.03134 | 11.56s |
-| Gemini 3.1 Pro | Google | 22.4 | 22–23 | 23, 22, 22, 23, 22 | $0.00497 | $0.00464 | 11.66s |
-| Grok 4.6 | xAI (via Bedrock) | 20.4 | 18–23 | 18, 21, 19, 23, 21 | $0.01397 | $0.01187 | 24.33s |
-| Claude Sonnet 5 | Anthropic | 20.2 | 19–22 | 19, 20, 22, 21, 19 | $0.01132 | $0.00953 | 5.58s |
-| GPT-5.6 Terra | OpenAI | 20.0 | 19–21 | 20, 19, 20, 21, 20 | $0.00695 | $0.00579 | 3.48s |
-| GPT-5 Mini (high) | OpenAI | 19.6 | 19–20 | 20, 20, 20, 19, 19 | $0.00863 | $0.00704 | 27.69s |
-| GPT-5 Mini (low) | OpenAI | 17.8 | 16–19 | 17, 16, 19, 18, 19 | $0.00158 | $0.00117 | 4.61s |
-| Gemini 2.5 Flash | Google | 16.8 | 15–18 | 15, 17, 18, 17, 17 | $0.00160 | $0.00112 | 7.84s |
-| Claude Haiku 4.5 | Anthropic | 15.6 | 14–18 | 16, 14, 18, 14, 16 | $0.00492 | $0.00320 | 5.17s |
-| DeepSeek V3.2 | DeepSeek (via Bedrock) | 13.2 | 12–15 | 12, 13, 13, 15, 13 | $0.00254 | $0.00140 | 10.19s |
+| Model | Provider | Effort | Mean /24 | Range | Per-run | $/correct | $/task | Median |
+|---|---|---|---|---|---|---|---|---|
+| GPT-5.6 Sol | OpenAI | High | 23.4 | 23–24 | 23, 23, 23, 24, 24 | $0.01407 | $0.01372 | 4.34s |
+| Claude Opus 5.5 | Anthropic | High | 23.4 | 23–24 | 23, 23, 23, 24, 24 | $0.01881 | $0.01834 | 6.82s |
+| Claude Opus 5 | Anthropic | High | 23.4 | 23–24 | 23, 24, 23, 24, 23 | $0.02461 | $0.02400 | 8.32s |
+| GPT-5.6 Luna | OpenAI | High | 23.2 | 23–24 | 24, 23, 23, 23, 23 | $0.00089 | $0.00086 | 4.15s |
+| Claude Fable 5.1 | Anthropic | High | 23.2 | 23–24 | 24, 23, 23, 23, 23 | $0.04269 | $0.04126 | 7.45s |
+| GPT-6 Astra | OpenAI | High | 23.0 | 23–23 | 23, 23, 23, 23, 23 | $0.03270 | $0.03134 | 11.56s |
+| Gemini 3.1 Pro | Google | High | 22.4 | 22–23 | 23, 22, 22, 23, 22 | $0.00497 | $0.00464 | 11.66s |
+| Grok 4.6 | xAI (via Bedrock) | Default | 20.4 | 18–23 | 18, 21, 19, 23, 21 | $0.01397 | $0.01187 | 24.33s |
+| Claude Sonnet 5 | Anthropic | High | 20.2 | 19–22 | 19, 20, 22, 21, 19 | $0.01132 | $0.00953 | 5.58s |
+| GPT-5.6 Terra | OpenAI | High | 20.0 | 19–21 | 20, 19, 20, 21, 20 | $0.00695 | $0.00579 | 3.48s |
+| GPT-5 Mini (high) | OpenAI | High | 19.6 | 19–20 | 20, 20, 20, 19, 19 | $0.00863 | $0.00704 | 27.69s |
+| GPT-5 Mini (low) | OpenAI | Low | 17.8 | 16–19 | 17, 16, 19, 18, 19 | $0.00158 | $0.00117 | 4.61s |
+| Gemini 2.5 Flash | Google | Default | 16.8 | 15–18 | 15, 17, 18, 17, 17 | $0.00160 | $0.00112 | 7.84s |
+| Claude Haiku 4.5 | Anthropic | Default | 15.6 | 14–18 | 16, 14, 18, 14, 16 | $0.00492 | $0.00320 | 5.17s |
+| DeepSeek V3.2 | DeepSeek (via Bedrock) | Default | 13.2 | 12–15 | 12, 13, 13, 15, 13 | $0.00254 | $0.00140 | 10.19s |
+
+Effort is the reasoning setting in `config-koans.yaml` (`effort` for Anthropic, `reasoning-effort` for OpenAI, `thinking-level` for Gemini). Default means no setting was passed, so the provider's default applied.
 
 Grok 4.6 had 7 errors out of 120 tasks (Bedrock TCP read timeouts and gateway 500s): 2 in chat run 1, 3 in chat run 3, and 2 in chat run 5. Every other model had zero errors. Grok's median including errored tasks is 24.33s; excluding them it is 23.54s.
 
